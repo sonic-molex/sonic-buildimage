@@ -1,4 +1,4 @@
-# SONIC otn-kvm Demo Instructions
+# SONIC otn-kvm Platform Build and Run Instructions
 
 This doc contains the procedure to compile, run and test the SONiC-OTN KVM image, the prototype the team currently has.  
 For SONiC compilation environment setup, please refer to [sonic-buildimage](https://github.com/sonic-net/sonic-buildimage) and [README.md](https://github.com/sonic-net/sonic-buildimage/blob/master/README.md)
@@ -207,44 +207,8 @@ We have added the following tables to support data of OCS.
   - OTN_OCM_CHANNEL_TABLE
   - OTN_OSC_TABLE
 
-## CLI Support for OTN
-We use SONiC CLI Auto-generation tool to support SONiC OTN CLI by ocs yang model. For more detail please refer to [SONiC CLI Auto-generation tool](https://github.com/sonic-net/SONiC/blob/master/doc/cli_auto_generation/cli_auto_generation.md)
 
-### Generate OTN CLI command
-```bash
-sudo -i
 
-```
-
-### Features
-- show xxxxx
-- config xxxxx
-
-### Show OTN xxxxx configuration
-```bash
-root@sonic:~# show xxxxx
-
-root@sonic:~#
-```
-
-### Show OTN xxxxx state
-```bash
-root@sonic:~# show xxxxx 
-
-root@sonic:~# 
-```
-
-## REST API Support for OTN
-REST API follows RESTCONF protocol
-
-In ```sonic-mgmt-common```, REST APIs are generated from ```sonic-xxxxx.yang``` yang model.
-
-### Show OTN xxxxx configuration
-```bash
-admin@sonic:~$
-```
-
-### Show OTN xxxxx state
-```bash
-admin@sonic:~$
-```
+## OTN gNMI and REST Examples
+Detailed CLI, REST and gNMI examples for the `otn-kvm` device are available in
+[OTN-KVM-NBI-Examples](./OTN-KVM-NBI-Example.md).
