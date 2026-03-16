@@ -1,0 +1,23 @@
+{
+    "__README__" : "OTN platform event profile. name must match type-id captured by otn_regex.json. Supported severities: CRITICAL, MAJOR, MINOR, WARNING, INFORMATIONAL.",
+    "events":[
+        {
+            "name": "SYSTEM_STATE",
+            "severity": "INFORMATIONAL",
+            "enable": "true",
+            "message" : ""
+        },
+        {
+            "name": "Invalid Target Gain",
+            "severity": "MINOR",
+            "enable": "true",
+            "message": "OTN Invalid Target Gain"
+        },
+        {
+            "name": "Out of Gain Range",
+            "severity": "MINOR",
+            "enable": "true",
+            "message": "OTN Out of Gain Range"
+        }
+    ]
+}

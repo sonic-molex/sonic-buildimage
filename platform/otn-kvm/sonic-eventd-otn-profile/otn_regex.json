@@ -1,0 +1,12 @@
+[
+    {
+        "tag": "otn-alarm",
+        "regex": ".*, (CRITICAL|MAJOR|MINOR|WARNING|INFORMATIONAL), (\\S+), ([^,]+), (RAISE|CLEAR)",
+        "params": [ "severity", "resource", "type-id", "action" ]
+    },
+    {
+        "tag": "otn-alarm",
+        "regex": ".*, (CRITICAL|MAJOR|MINOR|WARNING|INFORMATIONAL), (\\S+), ([^,]+)",
+        "params": [ "severity", "resource", "type-id" ]
+    }
+]
