@@ -22,6 +22,8 @@ SYSTEMD_INSTALL_DIR := debian/$(PACKAGE_NAME)/lib/systemd/system
 # Source directories
 YANG_MODELS_SRC := /sonic/src/sonic-mgmt-common/models/yang
 DEVICE_BASE := /sonic/device
+LIBYANG_C_TAG := v4.2.2
+LIBYANG_PY_VERSION := 4.0.0
 
 %:
 	dh $@
@@ -32,7 +34,8 @@ override_dh_auto_build:
 	@echo "========================================"
 	# Clone and build libyang from source
 	@if [ ! -d "$(CURDIR)/libyang" ]; then \
-		git clone https://github.com/CESNET/libyang.git $(CURDIR)/libyang && \
+		echo "Cloning libyang tag $(LIBYANG_C_TAG)" && \
+		git clone --depth 1 --branch $(LIBYANG_C_TAG) https://github.com/CESNET/libyang.git $(CURDIR)/libyang && \
 		cd $(CURDIR)/libyang && \
 		mkdir -p build && cd build && \
 		cmake -DCMAKE_INSTALL_PREFIX=$(CURDIR)/libyang-install -DCMAKE_INSTALL_INCLUDEDIR=include ..&& \
@@ -50,7 +53,7 @@ override_dh_auto_build:
 	@export CFLAGS="-I$(CURDIR)/libyang-install/include" && \
 	export LDFLAGS="-L$(CURDIR)/libyang-install/lib" && \
 	export LD_LIBRARY_PATH=$(CURDIR)/libyang-install/lib:$$LD_LIBRARY_PATH && \
-	pip3 install --target=$(CURDIR)/python-deps libyang
+	pip3 install --target=$(CURDIR)/python-deps libyang==$(LIBYANG_PY_VERSION)
 	
 	@echo "========================================"
 	@echo "Auto-discovering devices with YANG configs..."
