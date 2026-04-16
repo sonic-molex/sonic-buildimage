@@ -1,0 +1,8 @@
+#DPKG FRK
+include $(PLATFORM_PATH)/thrift.dep
+include $(PLATFORM_PATH)/hal-server.dep
+include $(PLATFORM_PATH)/hal-client.dep
+include $(PLATFORM_PATH)/sai.dep
+include $(PLATFORM_PATH)/docker-syncd-otn.dep
+include $(PLATFORM_PATH)/platform-modules-otn.dep
+include $(PLATFORM_PATH)/one-image.dep

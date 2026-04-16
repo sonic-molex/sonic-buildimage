@@ -1,0 +1,11 @@
+--- a/patch/kconfig-inclusions
++++ b/patch/kconfig-inclusions
+@@ -40,6 +40,7 @@
+ CONFIG_OF=y
+ CONFIG_EEPROM_AT24=m
+ CONFIG_AMD_XGBE=m
+-CONFIG_IGB=m
++CONFIG_IGB=y
++CONFIG_IGC=y
+ CONFIG_MLXSW_CORE=m
+ CONFIG_SERIAL_8250_DW=y
