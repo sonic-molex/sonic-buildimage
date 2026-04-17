@@ -1,6 +1,6 @@
 # sonic-pm (OTN PM daemon) Python wheel
 
-ifeq ($(CONFIGURED_PLATFORM),otn-kvm)
+ifeq ($(CONFIGURED_PLATFORM),otn-kvm,otn-molex)
 SONIC_PM_PY3 = sonic_pm-1.0-py3-none-any.whl
 $(SONIC_PM_PY3)_SRC_PATH = $(PLATFORM_PATH)/sonic-pm
 $(SONIC_PM_PY3)_DEPENDS = $(SONIC_PY_COMMON_PY3)

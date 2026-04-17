@@ -1283,7 +1283,7 @@ sudo touch $FILESYSTEM_ROOT_ETC_SONIC/enable_multidb
 {% endif %}
 
 ## Load OTN configuration files
-{% if sonic_asic_platform in ["otn-kvm", "otn"] %}
+{% if sonic_asic_platform in ["otn-kvm", "otn-molex"] %}
 sudo cp $IMAGE_CONFIGS/otn/otn-config.service $FILESYSTEM_ROOT_USR_LIB_SYSTEMD_SYSTEM
 sudo cp $IMAGE_CONFIGS/otn/otn-config.sh $FILESYSTEM_ROOT/usr/bin/
 echo "otn-config.service" | sudo tee -a $GENERATED_SERVICE_FILE
