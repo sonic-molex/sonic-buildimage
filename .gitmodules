@@ -150,3 +150,6 @@
 [submodule "src/sonic-optical-control"]
 	path = src/sonic-optical-control
 	url = https://github.com/sonic-molex/sonic-optical-control
+[submodule "platform/otn-molex/sonic-platform-modules-otn/modules/dma_ip_drivers"]
+	path = platform/otn-molex/sonic-platform-modules-otn/modules/dma_ip_drivers
+	url = https://github.com/Xilinx/dma_ip_drivers.git

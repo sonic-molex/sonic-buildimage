@@ -6,8 +6,8 @@ PACKAGE_PRE_NAME := sonic-platform-otn-molex
 KVERSION   ?= $(shell uname -r)
 KERNEL_SRC :=  /lib/modules/$(KVERSION)
 MOD_ROOT_DIR:= $(shell pwd)
-DRIVERS_SRC  := $(MOD_ROOT_DIR)/drivers
-XDMA_DRIVERS_SRC     := $(DRIVERS_SRC)/dma_ip_drivers/XDMA/linux-kernel/xdma
+MODULES_SRC  := $(MOD_ROOT_DIR)/modules
+XDMA_MODULES_SRC     := $(MODULES_SRC)/dma_ip_drivers/XDMA/linux-kernel/xdma
 
 ILA_DIRS:= ila
 
@@ -15,8 +15,8 @@ ILA_DIRS:= ila
 	dh $@ --with python3
 
 override_dh_auto_build:
-	make -C $(KERNEL_SRC)/build M=$(DRIVERS_SRC)
-	make -C $(KERNEL_SRC)/build M=$(XDMA_DRIVERS_SRC) KERNEL_SRC=$(KERNEL_SRC)
+	make -C $(KERNEL_SRC)/build M=$(MODULES_SRC)
+	make -C $(KERNEL_SRC)/build M=$(XDMA_MODULES_SRC) KERNEL_SRC=$(KERNEL_SRC)
 	(for mod in $(ILA_DIRS); do \
 	    cd $(MOD_ROOT_DIR)/$${mod}; \
 	    if [ -f setup.py ]; then \
@@ -28,8 +28,8 @@ override_dh_auto_build:
 
 override_dh_auto_install:
 	dh_installdirs -p$(PACKAGE_PRE_NAME) $(KERNEL_SRC)/$(INSTALL_MOD_DIR)
-	cp $(DRIVERS_SRC)/*.ko debian/$(PACKAGE_PRE_NAME)/$(KERNEL_SRC)/$(INSTALL_MOD_DIR)
-	cp $(XDMA_DRIVERS_SRC)/*.ko debian/$(PACKAGE_PRE_NAME)/$(KERNEL_SRC)/$(INSTALL_MOD_DIR)
+	cp $(MODULES_SRC)/*.ko debian/$(PACKAGE_PRE_NAME)/$(KERNEL_SRC)/$(INSTALL_MOD_DIR)
+	cp $(XDMA_MODULES_SRC)/*.ko debian/$(PACKAGE_PRE_NAME)/$(KERNEL_SRC)/$(INSTALL_MOD_DIR)
 	(for mod in $(ILA_DIRS); do \
 	    cd $(MOD_ROOT_DIR)/$${mod}; \
 	    python3 setup.py install --root=$(MOD_ROOT_DIR)/debian/$(PACKAGE_PRE_NAME)-$${mod} --install-layout=deb; \
