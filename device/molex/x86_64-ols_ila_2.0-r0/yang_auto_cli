@@ -1,0 +1,3 @@
+#List yang models, annotation, and optional layout flag for sonic yang generation
+openconfig-optical-attenuator.yang openconfig-optical-attenuator-annot.yang vertical
+openconfig-optical-amplifier.yang openconfig-optical-amplifier-annot.yang vertical
