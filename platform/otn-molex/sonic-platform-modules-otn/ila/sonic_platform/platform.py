@@ -16,7 +16,7 @@ except ImportError as e:
 
 class Platform(PlatformBase):
     """
-    OTN-KVM Platform-specific class
+    OTN-molex-ila Platform-specific class
     """
 
     def __init__(self):

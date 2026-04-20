@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 ########################################################################
-# OTN-KVM
+# OTN-molex-ila
 #
 # Module contains an implementation of SONiC Platform Base API and
 # provides the Fans' information which are available in the platform.
@@ -19,7 +19,7 @@ except ImportError as e:
 
 
 class Fan(FanBase):
-    """OTN-KVM Platform-specific Fan class"""
+    """OTN-molex-ila Platform-specific Fan class"""
 
     def __init__(self, desc):
         FanBase.__init__(self)

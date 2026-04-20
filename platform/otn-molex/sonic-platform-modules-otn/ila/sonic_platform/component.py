@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 ########################################################################
-# OTN-KVM
+# OTN-molex-ila
 #
 # Module contains an implementation of SONiC Platform Base API and
 # provides the Components' (e.g., BIOS, CPLD, FPGA, etc.) available in
@@ -22,7 +22,7 @@ except ImportError as e:
 
 
 class Component(ComponentBase):
-    """OTN-KVM Platform-specific Component class"""
+    """OTN-molex-ila Platform-specific Component class"""
 
     def __init__(self, desc):
 

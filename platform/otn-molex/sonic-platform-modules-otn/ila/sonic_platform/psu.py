@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 ########################################################################
-# OTN-KVM
+# OTN-molex-ila
 #
 # Module contains an implementation of SONiC Platform Base API and
 # provides the PSUs' information which are available in the platform
@@ -20,7 +20,7 @@ except ImportError as e:
 
 
 class Psu(PsuBase):
-    """OTN-KVM Platform-specific PSU class"""
+    """OTN-molex-ila Platform-specific PSU class"""
 
     def __init__(self, desc):
         PsuBase.__init__(self)

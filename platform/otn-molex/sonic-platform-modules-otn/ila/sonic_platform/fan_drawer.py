@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 ########################################################################
-# OTN-KVM
+# OTN-molex-ila
 #
 # Module contains an implementation of SONiC Platform Base API and
 # provides the Fan-Drawers' information available in the platform.
@@ -19,7 +19,7 @@ except ImportError as e:
 
 
 class FanDrawer(FanDrawerBase):
-    """OTN-KVM Platform-specific Fan Drawer class"""
+    """OTN-molex-ila Platform-specific Fan Drawer class"""
 
     def __init__(self, desc):
         FanDrawerBase.__init__(self)

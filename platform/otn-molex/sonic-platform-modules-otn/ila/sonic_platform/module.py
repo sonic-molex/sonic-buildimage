@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 ########################################################################
-# OTN-KVM
+# OTN-molex-ila
 #
 # Module contains an implementation of SONiC Platform Base API and
 # provides the Modules' information which are available in the platform
@@ -19,7 +19,7 @@ except ImportError as e:
 
 
 class Module(ModuleBase):
-    """OTN-KVM Platform-specific Module class"""
+    """OTN-molex-ila Platform-specific Module class"""
 
     def __init__(self, desc):
         ModuleBase.__init__(self)

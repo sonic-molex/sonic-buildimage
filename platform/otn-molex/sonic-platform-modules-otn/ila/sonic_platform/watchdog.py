@@ -1,6 +1,6 @@
 ########################################################################
 #
-# OTN-KVM
+# OTN-molex-ila
 #
 # Abstract base class for implementing a platform-specific class with
 # which to interact with a hardware watchdog module in SONiC
