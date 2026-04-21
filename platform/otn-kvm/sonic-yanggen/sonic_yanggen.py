@@ -40,6 +40,8 @@ class Annotation:
         self.info = {}
         self.tables = []
         self.dbs = set()
+        self.rpcs = []
+        self.actions = []
         self.parse()
 
 
@@ -118,6 +120,16 @@ class Annotation:
         self.tables[-1][TB_KEY_IDX] = v
 
 
+    def callback(self, deviation, ext_key, target) -> None:
+        """
+        Parse rpc-callback or action-callback name and append to target list.
+        """
+        if self.leaf_value(deviation, ext_key) is None:
+            return
+
+        xpath = deviation[:deviation.find('{')].strip()[1:-1]
+        target.append(xpath.rsplit('/', 1)[-1].split(':')[-1])
+
     def field_name(self, deviation) -> None:
         """
         Parse field name or field transformer
@@ -169,6 +181,8 @@ class Annotation:
         deviations = content.split(' deviation ')
         for deviation in deviations[1:]:
             deviation = deviation.strip()
+            self.callback(deviation, 'sonic-ext:rpc-callback', self.rpcs)
+            self.callback(deviation, 'sonic-ext:action-callback', self.actions)
             self.table_name(deviation)
             self.key_name(deviation)
             self.field_name(deviation)
@@ -205,11 +219,18 @@ class Generator:
         self.module = self.__load_module()
         self.module_name = self.__name()
         self.field_record = []
+        self._list_action_names = set()
 
 
     def __load_module(self) -> ly.Module:
+        self.imp_modules = []
         for m in self.annot.info['imports']:
-            self.ctx.load_module(m[0])
+            try:
+                self.imp_modules.append(self.ctx.load_module(m[0]))
+            except Exception:
+                # Some imports (e.g. sonic-extensions) may not be present
+                # in the search path; that's fine, just skip them.
+                pass
 
         return self.ctx.load_module(self.annot.info['src_module'][0])
 
@@ -463,6 +484,25 @@ class Generator:
         return text
 
 
+    def _find_actions_in_subtree(self, parent, keep):
+        """
+        Find action schema nodes under parent that match names in keep set.
+        Uses libyang tree traversal via .children() and .nodetype().
+        """
+        found = []
+        try:
+            children = parent.children()
+        except Exception:
+            return found
+        for child in children:
+            nt = child.nodetype()
+            if nt == ly.SNode.ACTION and child.name() in keep:
+                found.append(child)
+            elif nt in (ly.SNode.CONTAINER, ly.SNode.LIST):
+                found.extend(self._find_actions_in_subtree(child, keep))
+        return found
+
+
     def gen_container(self, table) -> str:
         """
         Generate container information for sonic yang
@@ -481,6 +521,14 @@ class Generator:
 
         text += self.gen_list(table)
 
+        # Emit list-level actions that are descendants of this table's schema node
+        if self.annot.actions:
+            keep = set(self.annot.actions) - self._list_action_names
+            if keep:
+                for action_node in self._find_actions_in_subtree(node, keep):
+                    text += self._emit_rpc_or_action(action_node, 'action')
+                    self._list_action_names.add(action_node.name())
+
         text += '}}'
 
         return text
@@ -491,6 +539,8 @@ class Generator:
         Generate header information for sonic yang
         """
         text = 'module ' + self.module_name + ' {'
+        if self.annot.actions:
+            text += 'yang-version "1.1";'
         text += self.namespace()
         text += self.prefix(MODEL_TITLE_DEST)
         text += self.imports()
@@ -513,10 +563,155 @@ class Generator:
             if self.cfg is None or table[TB_DBTYPE_IDX] == self.cfg:
                 text += self.gen_container(table)
 
-        text += '}}'
+        # Actions not already placed in a list go in the outer container
+        text += self.gen_actions()
+
+        text += '}'  # close outer top-level container
 
         return text
-    
+
+    def gen_rpcs(self) -> str:
+        """
+        Generate rpc for sonic yang.
+
+        RPCs may be defined either in the source openconfig module or in
+        an external openconfig module imported by the annotation file
+        (so a single auxiliary module can host RPCs/augments that target
+        multiple upstream models).
+        """
+        if not self.annot.rpcs:
+            return ''
+
+        keep = set(self.annot.rpcs)
+        text = ''
+        for mod in [self.module] + getattr(self, 'imp_modules', []):
+            for rpc in mod.children(types=(ly.SNode.RPC,)):
+                if rpc.name() in keep:
+                    text += self._emit_rpc_or_action(rpc, 'rpc')
+        return text
+
+    def gen_actions(self) -> str:
+        """
+        Generate action statements for sonic yang.
+
+        Only emits actions that were NOT already placed inside a table's
+        list by gen_container (i.e. top-level-container-only actions).
+        """
+        if not self.annot.actions:
+            return ''
+
+        keep = set(self.annot.actions) - self._list_action_names
+        if not keep:
+            return ''
+
+        text = ''
+        for mod in [self.module] + getattr(self, 'imp_modules', []):
+            self._walk_actions(mod, keep, text_parts := [])
+            text += ''.join(text_parts)
+        return text
+
+    def _walk_actions(self, parent, keep, text_parts) -> None:
+        """
+        Recursively walk data tree children to find action nodes.
+        """
+        try:
+            children = parent.children()
+        except Exception:
+            return
+        for child in children:
+            nt = child.nodetype()
+            if nt == ly.SNode.ACTION and child.name() in keep:
+                text_parts.append(self._emit_rpc_or_action(child, 'action'))
+            elif nt in (ly.SNode.CONTAINER, ly.SNode.LIST):
+                self._walk_actions(child, keep, text_parts)
+
+    def _emit_rpc_or_action(self, node, keyword) -> str:
+        """
+        Emit a single rpc or action block as flat YANG text.
+        """
+        text = keyword + ' ' + node.name() + ' {'
+        if node.description():
+            text += 'description "' + node.description() + '";'
+        for io_node, kw in ((node.input(), 'input'), (node.output(), 'output')):
+            if io_node is None:
+                continue
+            text += kw + ' {' + self._emit_inout(io_node) + '}'
+        text += '}'
+        return text
+
+
+    def _emit_inout(self, parent) -> str:
+        """
+        Emit children of an input/output (or container) node
+        """
+        text = ''
+        for child in parent.children():
+            nt = child.nodetype()
+            if nt == ly.SNode.LEAF:
+                text += self._emit_leaf(child, leaf_list=False)
+            elif nt == ly.SNode.LEAFLIST:
+                text += self._emit_leaf(child, leaf_list=True)
+            elif nt == ly.SNode.CONTAINER:
+                text += self._emit_container(child)
+        return text
+
+
+    def _emit_container(self, node) -> str:
+        text = 'container ' + node.name() + ' {'
+        if node.description():
+            text += 'description "' + node.description() + '";'
+        text += self._emit_inout(node)
+        text += '}'
+        return text
+
+
+    def _emit_leaf(self, leaf, leaf_list: bool) -> str:
+        kw = 'leaf-list' if leaf_list else 'leaf'
+        text = kw + ' ' + leaf.name() + ' {'
+        text += self._emit_type(leaf.type())
+        if leaf.mandatory():
+            text += 'mandatory true;'
+        if not leaf_list and leaf.default() is not None:
+            text += 'default "' + str(leaf.default()) + '";'
+        if leaf.units():
+            text += 'units "' + leaf.units() + '";'
+        if leaf.description():
+            text += 'description "' + leaf.description() + '";'
+        text += '}'
+        return text
+
+
+    def _emit_type(self, t) -> str:
+        """
+        Emit a `type ...;` (or `type ... { ... }`) for a libyang Type.
+        SONiC-specific rewrites:
+          - leafref          -> string  (path target may live in a foreign
+                                         module that sonic-yang can't resolve)
+          - foreign-prefixed -> string  (e.g. oc-yang:date-and-time)
+        Enumerations defined via a typedef get expanded inline so the
+        typedef itself never has to be emitted.
+        """
+        base = t.base()
+        name = t.name() or ''
+
+        if base == ly.Type.LEAFREF:
+            return 'type string;'
+        if ':' in name:
+            return 'type string;'
+
+        if base == ly.Type.ENUM:
+            text = 'type enumeration {'
+            for e in t.enums():
+                ev = e.value()
+                if ev is None:
+                    text += 'enum "' + e.name() + '";'
+                else:
+                    text += 'enum "' + e.name() + '" {value ' + str(ev) + ';}'
+            text += '}'
+            return text
+
+        return 'type ' + t.basename() + ';'
+
 
     def gen_yang(self) -> str:
         """
@@ -524,6 +719,8 @@ class Generator:
         """
         text = self.gen_head()
         text += self.gen_tables()
+        text += self.gen_rpcs()
+        text += '}'  # close module
 
         debug_print(text)
         return text
