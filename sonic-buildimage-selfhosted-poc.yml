@@ -1,0 +1,87 @@
+# Azure DevOps POC for sonic-molex/sonic-buildimage on a self-hosted VM agent.
+#
+# Copy this file into the sonic-molex/sonic-buildimage fork, for example:
+#   .azure-pipelines/selfhosted-otn-kvm-poc.yml
+#
+# Then create an Azure DevOps pipeline from that file and set the pool name below
+# to the self-hosted pool that contains the Azure VM agent.
+#
+# This intentionally does not call azure-pipelines-build.yml: that template's
+# generic non-VS path builds target/sonic-<group>.bin, but otn-kvm needs
+# target/sonic-otn-kvm.img.gz.
+
+trigger: none
+pr: none
+
+parameters:
+- name: agentPool
+  type: string
+  default: sonic-buildimage-selfhosted
+- name: platform
+  type: string
+  default: otn-kvm
+- name: buildTarget
+  type: string
+  default: target/sonic-otn-kvm.img.gz
+- name: buildOptions
+  type: string
+  default: USERNAME=admin
+
+name: selfhosted_$(Build.SourceBranchName)_$(Date:yyyyMMdd)$(Rev:.r)
+
+variables:
+- template: .azure-pipelines/template-variables.yml
+- name: CACHE_MODE
+  value: none
+- name: ENABLE_FIPS
+  value: n
+
+stages:
+- stage: Build
+  displayName: Self-hosted otn-kvm build POC
+  pool:
+    name: ${{ parameters.agentPool }}
+  jobs:
+  - job: otn_kvm
+    displayName: Build target/sonic-otn-kvm.img.gz
+    timeoutInMinutes: 1440
+    steps:
+    - checkout: self
+      fetchDepth: 0
+      submodules: false
+      displayName: Checkout sonic-buildimage
+
+    - bash: |
+        set -euxo pipefail
+        make init
+      displayName: make init
+
+    - bash: |
+        set -euxo pipefail
+        sudo modprobe overlay || true
+        sudo bash -c 'echo 1 > /proc/sys/vm/compact_memory' || true
+        BUILD_OPTIONS="${{ parameters.buildOptions }} SONIC_BUILD_JOBS=$(nproc)"
+        make PLATFORM=${{ parameters.platform }} PLATFORM_ARCH=amd64 ${BUILD_OPTIONS} configure
+      displayName: make configure PLATFORM=${{ parameters.platform }}
+
+    - bash: |
+        set -euxo pipefail
+        BUILD_OPTIONS="${{ parameters.buildOptions }} SONIC_BUILD_JOBS=$(nproc)"
+        make ${BUILD_OPTIONS} ${{ parameters.buildTarget }}
+      displayName: make ${{ parameters.buildTarget }}
+
+    - bash: |
+        set -euxo pipefail
+        mkdir -p "$(Build.ArtifactStagingDirectory)/target"
+        if [ -f "${{ parameters.buildTarget }}" ]; then
+          cp -av "${{ parameters.buildTarget }}" "$(Build.ArtifactStagingDirectory)/target/"
+        else
+          echo "Build target not found: ${{ parameters.buildTarget }}"
+        fi
+      displayName: Stage otn-kvm image
+      condition: succeededOrFailed()
+
+    - publish: $(Build.ArtifactStagingDirectory)
+      artifact: sonic-buildimage.otn-kvm
+      displayName: Archive otn-kvm image
+      condition: succeededOrFailed()
