@@ -25,7 +25,7 @@ parameters:
   default: target/sonic-otn-kvm.img.gz
 - name: buildOptions
   type: string
-  default: USERNAME=admin
+  default: USERNAME=admin SONIC_BUILD_RETRY_COUNT=0 SONIC_BUILD_RETRY_INTERVAL=0
 
 name: selfhosted_$(Build.SourceBranchName)_$(Date:yyyyMMdd)$(Rev:.r)
 
@@ -35,6 +35,10 @@ variables:
   value: none
 - name: ENABLE_FIPS
   value: n
+- name: SONIC_BUILD_RETRY_COUNT
+  value: 0
+- name: SONIC_BUILD_RETRY_INTERVAL
+  value: 0
 
 stages:
 - stage: Build
@@ -46,10 +50,7 @@ stages:
     displayName: Build target/sonic-otn-kvm.img.gz
     timeoutInMinutes: 1440
     steps:
-    - checkout: self
-      fetchDepth: 0
-      submodules: false
-      displayName: Checkout sonic-buildimage
+    - checkout: none
 
     - bash: |
         set -euo pipefail
@@ -64,20 +65,26 @@ stages:
 
     - bash: |
         set -euxo pipefail
+        build_dir="$(Pipeline.Workspace)/sonic-buildimage-$(Build.BuildId)-$(System.JobAttempt)"
+        rm -rf "${build_dir}"
+        git clone --no-recurse-submodules "$(Build.Repository.Uri)" "${build_dir}"
+        cd "${build_dir}"
+        git checkout -f "$(Build.SourceVersion)"
         git submodule sync --recursive
-        rm -rf src/sonic-dash-api
-        git submodule update --init --recursive src/sonic-dash-api
-        git submodule status src/sonic-dash-api
-        test -f src/sonic-dash-api/debian/changelog
-      displayName: Clean build outputs and preflight sonic-dash-api submodule
+        git submodule update --init --recursive --jobs "$(nproc)"
+        git submodule status --recursive
+        echo "##vso[task.setvariable variable=SONIC_BUILD_DIR]${build_dir}"
+      displayName: Fresh clone and initialize submodules
 
     - bash: |
         set -euxo pipefail
+        cd "$(SONIC_BUILD_DIR)"
         make init
       displayName: make init
 
     - bash: |
         set -euxo pipefail
+        cd "$(SONIC_BUILD_DIR)"
         modprobe overlay || true
         echo 1 > /proc/sys/vm/compact_memory || true
         BUILD_OPTIONS="${{ parameters.buildOptions }} SONIC_BUILD_JOBS=$(nproc)"
@@ -86,12 +93,14 @@ stages:
 
     - bash: |
         set -euxo pipefail
+        cd "$(SONIC_BUILD_DIR)"
         BUILD_OPTIONS="${{ parameters.buildOptions }} SONIC_BUILD_JOBS=$(nproc)"
         make ${BUILD_OPTIONS} ${{ parameters.buildTarget }}
       displayName: make ${{ parameters.buildTarget }}
 
     - bash: |
         set -euxo pipefail
+        cd "$(SONIC_BUILD_DIR)"
         mkdir -p "$(Build.ArtifactStagingDirectory)/target"
         if [ -f "${{ parameters.buildTarget }}" ]; then
           cp -av "${{ parameters.buildTarget }}" "$(Build.ArtifactStagingDirectory)/target/"
