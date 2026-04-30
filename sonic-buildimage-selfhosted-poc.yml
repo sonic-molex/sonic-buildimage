@@ -49,6 +49,7 @@ stages:
     - checkout: self
       fetchDepth: 0
       submodules: false
+      clean: true
       displayName: Checkout sonic-buildimage
 
     - bash: |
@@ -61,6 +62,15 @@ stages:
       displayName: Configure GitHub auth for private submodules
       env:
         GITHUB_TOKEN: $(GITHUB_TOKEN)
+
+    - bash: |
+        set -euxo pipefail
+        git submodule sync --recursive
+        rm -rf src/sonic-dash-api
+        git submodule update --init --recursive src/sonic-dash-api
+        git submodule status src/sonic-dash-api
+        test -f src/sonic-dash-api/debian/changelog
+      displayName: Preflight sonic-dash-api submodule
 
     - bash: |
         set -euxo pipefail
