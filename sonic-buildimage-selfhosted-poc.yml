@@ -64,7 +64,6 @@ stages:
 
     - bash: |
         set -euxo pipefail
-        sudo rm -rf fsroot.docker.* fsroot-* target
         git submodule sync --recursive
         rm -rf src/sonic-dash-api
         git submodule update --init --recursive src/sonic-dash-api
@@ -79,8 +78,8 @@ stages:
 
     - bash: |
         set -euxo pipefail
-        sudo modprobe overlay || true
-        sudo bash -c 'echo 1 > /proc/sys/vm/compact_memory' || true
+        modprobe overlay || true
+        echo 1 > /proc/sys/vm/compact_memory || true
         BUILD_OPTIONS="${{ parameters.buildOptions }} SONIC_BUILD_JOBS=$(nproc)"
         make PLATFORM=${{ parameters.platform }} PLATFORM_ARCH=amd64 ${BUILD_OPTIONS} configure
       displayName: make configure PLATFORM=${{ parameters.platform }}
@@ -110,7 +109,6 @@ stages:
     - bash: |
         set -euo pipefail
         git config --global --unset-all url."https://x-access-token:${GITHUB_TOKEN}@github.com/".insteadOf || true
-        sudo chown -R "$(id -u):$(id -g)" "$(Pipeline.Workspace)" || true
       displayName: Remove GitHub auth rewrite
       condition: always()
       env:
