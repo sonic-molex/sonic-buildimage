@@ -52,6 +52,17 @@ stages:
       displayName: Checkout sonic-buildimage
 
     - bash: |
+        set -euo pipefail
+        if [ -z "${GITHUB_TOKEN:-}" ]; then
+          echo "GITHUB_TOKEN pipeline secret is required for private GitHub submodules."
+          exit 2
+        fi
+        git config --local url."https://x-access-token:${GITHUB_TOKEN}@github.com/".insteadOf "https://github.com/"
+      displayName: Configure GitHub auth for private submodules
+      env:
+        GITHUB_TOKEN: $(GITHUB_TOKEN)
+
+    - bash: |
         set -euxo pipefail
         make init
       displayName: make init
