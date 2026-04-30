@@ -57,7 +57,7 @@ stages:
           echo "GITHUB_TOKEN pipeline secret is required for private GitHub submodules."
           exit 2
         fi
-        git config --local url."https://x-access-token:${GITHUB_TOKEN}@github.com/".insteadOf "https://github.com/"
+        git config --global url."https://x-access-token:${GITHUB_TOKEN}@github.com/".insteadOf "https://github.com/"
       displayName: Configure GitHub auth for private submodules
       env:
         GITHUB_TOKEN: $(GITHUB_TOKEN)
@@ -96,3 +96,11 @@ stages:
       artifact: sonic-buildimage.otn-kvm
       displayName: Archive otn-kvm image
       condition: succeededOrFailed()
+
+    - bash: |
+        set -euo pipefail
+        git config --global --unset-all url."https://x-access-token:${GITHUB_TOKEN}@github.com/".insteadOf || true
+      displayName: Remove GitHub auth rewrite
+      condition: always()
+      env:
+        GITHUB_TOKEN: $(GITHUB_TOKEN)
