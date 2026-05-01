@@ -91,22 +91,8 @@ stages:
     - bash: |
         set -euxo pipefail
         cd "$(SONIC_BUILD_DIR)"
-        mkdir -p "$(Build.ArtifactStagingDirectory)/logs"
         BUILD_OPTIONS="${{ parameters.buildOptions }} SONIC_BUILD_JOBS=$(nproc)"
-        build_log="$(Build.ArtifactStagingDirectory)/logs/make-target.log"
-        heartbeat() {
-          while true; do
-            sleep 300
-            echo "##[section]$(date -u '+%Y-%m-%dT%H:%M:%SZ') still building ${{ parameters.buildTarget }}"
-            echo "Workspace: $(SONIC_BUILD_DIR)"
-          done
-        }
-        heartbeat &
-        heartbeat_pid="$!"
-        trap 'kill "${heartbeat_pid}" 2>/dev/null || true' EXIT
-        make ${BUILD_OPTIONS} ${{ parameters.buildTarget }} 2>&1 | tee "${build_log}"
-        kill "${heartbeat_pid}" 2>/dev/null || true
-        trap - EXIT
+        make ${BUILD_OPTIONS} ${{ parameters.buildTarget }}
         test -f "${{ parameters.buildTarget }}"
       displayName: make ${{ parameters.buildTarget }}
       workingDirectory: $(Pipeline.Workspace)
