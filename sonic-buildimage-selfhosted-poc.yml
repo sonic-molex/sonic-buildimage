@@ -1,4 +1,11 @@
 # Azure DevOps POC for sonic-molex/sonic-buildimage on a self-hosted VM agent.
+#
+# Copy this file into the sonic-molex/sonic-buildimage fork, for example:
+#   .azure-pipelines/selfhosted-otn-kvm-poc.yml
+#
+# Then create an Azure DevOps pipeline from that file and set the pool name below
+# to the self-hosted pool that contains the Azure VM agent.
+#
 # This intentionally does not call azure-pipelines-build.yml: that template's
 # generic non-VS path builds target/sonic-<group>.bin, but otn-kvm needs
 # target/sonic-otn-kvm.img.gz.
@@ -101,8 +108,6 @@ stages:
           sleep 300
           echo "##[section]$(date -u '+%Y-%m-%dT%H:%M:%SZ') still building ${{ parameters.buildTarget }}"
           echo "Workspace: $(SONIC_BUILD_DIR)"
-          echo "Last 80 lines from make-target.log:"
-          tail -n 80 "${build_log}" || true
         done
 
         set +e
