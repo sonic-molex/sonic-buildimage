@@ -35,8 +35,6 @@ variables:
   value: 0
 - name: SONIC_BUILD_RETRY_INTERVAL
   value: 0
-- name: DOCKER_BUILDKIT
-  value: 1
 
 stages:
 - stage: Build
@@ -92,7 +90,6 @@ stages:
         cd "$(SONIC_BUILD_DIR)"
         modprobe overlay || true
         echo 1 > /proc/sys/vm/compact_memory || true
-        export DOCKER_BUILDKIT=1
         BUILD_OPTIONS="${{ parameters.buildOptions }} SONIC_BUILD_JOBS=$(nproc)"
         make PLATFORM=${{ parameters.platform }} PLATFORM_ARCH=amd64 ${BUILD_OPTIONS} configure
       displayName: make configure PLATFORM=${{ parameters.platform }}
@@ -101,7 +98,6 @@ stages:
     - bash: |
         set -euxo pipefail
         cd "$(SONIC_BUILD_DIR)"
-        export DOCKER_BUILDKIT=1
         BUILD_OPTIONS="${{ parameters.buildOptions }} SONIC_BUILD_JOBS=$(nproc)"
         make ${BUILD_OPTIONS} ${{ parameters.buildTarget }}
         test -f "${{ parameters.buildTarget }}"
