@@ -1,11 +1,4 @@
 # Azure DevOps POC for sonic-molex/sonic-buildimage on a self-hosted VM agent.
-#
-# Copy this file into the sonic-molex/sonic-buildimage fork, for example:
-#   .azure-pipelines/selfhosted-otn-kvm-poc.yml
-#
-# Then create an Azure DevOps pipeline from that file and set the pool name below
-# to the self-hosted pool that contains the Azure VM agent.
-#
 # This intentionally does not call azure-pipelines-build.yml: that template's
 # generic non-VS path builds target/sonic-<group>.bin, but otn-kvm needs
 # target/sonic-otn-kvm.img.gz.
@@ -96,26 +89,24 @@ stages:
       workingDirectory: $(Pipeline.Workspace)
 
     - bash: |
-        set -euo pipefail
+        set -euxo pipefail
         cd "$(SONIC_BUILD_DIR)"
         mkdir -p "$(Build.ArtifactStagingDirectory)/logs"
         BUILD_OPTIONS="${{ parameters.buildOptions }} SONIC_BUILD_JOBS=$(nproc)"
         build_log="$(Build.ArtifactStagingDirectory)/logs/make-target.log"
-        make ${BUILD_OPTIONS} ${{ parameters.buildTarget }} >"${build_log}" 2>&1 &
-        make_pid="$!"
-
-        while kill -0 "${make_pid}" 2>/dev/null; do
-          sleep 300
-          echo "##[section]$(date -u '+%Y-%m-%dT%H:%M:%SZ') still building ${{ parameters.buildTarget }}"
-          echo "Workspace: $(SONIC_BUILD_DIR)"
-        done
-
-        set +e
-        wait "${make_pid}"
-        make_status="$?"
-        set -e
-        tail -n 200 "${build_log}" || true
-        [ "${make_status}" -eq 0 ]
+        heartbeat() {
+          while true; do
+            sleep 300
+            echo "##[section]$(date -u '+%Y-%m-%dT%H:%M:%SZ') still building ${{ parameters.buildTarget }}"
+            echo "Workspace: $(SONIC_BUILD_DIR)"
+          done
+        }
+        heartbeat &
+        heartbeat_pid="$!"
+        trap 'kill "${heartbeat_pid}" 2>/dev/null || true' EXIT
+        make ${BUILD_OPTIONS} ${{ parameters.buildTarget }} 2>&1 | tee "${build_log}"
+        kill "${heartbeat_pid}" 2>/dev/null || true
+        trap - EXIT
         test -f "${{ parameters.buildTarget }}"
       displayName: make ${{ parameters.buildTarget }}
       workingDirectory: $(Pipeline.Workspace)
