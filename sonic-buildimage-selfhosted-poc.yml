@@ -1,11 +1,4 @@
 # Azure DevOps POC for sonic-molex/sonic-buildimage on a self-hosted VM agent.
-#
-# Copy this file into the sonic-molex/sonic-buildimage fork, for example:
-#   .azure-pipelines/selfhosted-otn-kvm-poc.yml
-#
-# Then create an Azure DevOps pipeline from that file and set the pool name below
-# to the self-hosted pool that contains the Azure VM agent.
-#
 # This intentionally does not call azure-pipelines-build.yml: that template's
 # generic non-VS path builds target/sonic-<group>.bin, but otn-kvm needs
 # target/sonic-otn-kvm.img.gz.
@@ -60,6 +53,7 @@ stages:
         fi
         git config --global url."https://x-access-token:${GITHUB_TOKEN}@github.com/".insteadOf "https://github.com/"
       displayName: Configure GitHub auth for private submodules
+      workingDirectory: $(Pipeline.Workspace)
       env:
         GITHUB_TOKEN: $(GITHUB_TOKEN)
 
@@ -75,12 +69,14 @@ stages:
         git submodule status --recursive
         echo "##vso[task.setvariable variable=SONIC_BUILD_DIR]${build_dir}"
       displayName: Fresh clone and initialize submodules
+      workingDirectory: $(Pipeline.Workspace)
 
     - bash: |
         set -euxo pipefail
         cd "$(SONIC_BUILD_DIR)"
         make init
       displayName: make init
+      workingDirectory: $(Pipeline.Workspace)
 
     - bash: |
         set -euxo pipefail
@@ -90,6 +86,7 @@ stages:
         BUILD_OPTIONS="${{ parameters.buildOptions }} SONIC_BUILD_JOBS=$(nproc)"
         make PLATFORM=${{ parameters.platform }} PLATFORM_ARCH=amd64 ${BUILD_OPTIONS} configure
       displayName: make configure PLATFORM=${{ parameters.platform }}
+      workingDirectory: $(Pipeline.Workspace)
 
     - bash: |
         set -euo pipefail
@@ -116,6 +113,7 @@ stages:
         [ "${make_status}" -eq 0 ]
         test -f "${{ parameters.buildTarget }}"
       displayName: make ${{ parameters.buildTarget }}
+      workingDirectory: $(Pipeline.Workspace)
 
     - bash: |
         set -euxo pipefail
@@ -129,6 +127,7 @@ stages:
           exit 1
         fi
       displayName: Stage otn-kvm image
+      workingDirectory: $(Pipeline.Workspace)
       condition: succeededOrFailed()
 
     - publish: $(Build.ArtifactStagingDirectory)
@@ -140,6 +139,7 @@ stages:
         set -euo pipefail
         git config --global --unset-all url."https://x-access-token:${GITHUB_TOKEN}@github.com/".insteadOf || true
       displayName: Remove GitHub auth rewrite
+      workingDirectory: $(Pipeline.Workspace)
       condition: always()
       env:
         GITHUB_TOKEN: $(GITHUB_TOKEN)
