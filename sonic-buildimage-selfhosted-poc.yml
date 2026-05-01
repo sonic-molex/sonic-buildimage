@@ -4,7 +4,10 @@
 # target/sonic-otn-kvm.img.gz.
 
 trigger: none
-pr: none
+pr:
+  branches:
+    include:
+    - otn-dev
 
 parameters:
 - name: agentPool
