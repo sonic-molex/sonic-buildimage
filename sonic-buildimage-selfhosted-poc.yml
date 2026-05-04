@@ -1,0 +1,134 @@
+# Azure DevOps POC for sonic-molex/sonic-buildimage on a self-hosted VM agent.
+# This intentionally does not call azure-pipelines-build.yml: that template's
+# generic non-VS path builds target/sonic-<group>.bin, but otn-kvm needs
+# target/sonic-otn-kvm.img.gz.
+
+trigger: none
+pr:
+  branches:
+    include:
+    - otn-dev
+
+parameters:
+- name: agentPool
+  type: string
+  default: sonic-buildimage-selfhosted
+- name: platform
+  type: string
+  default: otn-kvm
+- name: buildTarget
+  type: string
+  default: target/sonic-otn-kvm.img.gz
+- name: buildOptions
+  type: string
+  default: USERNAME=admin SONIC_BUILD_RETRY_COUNT=0 SONIC_BUILD_RETRY_INTERVAL=0
+
+name: selfhosted_$(Build.SourceBranchName)_$(Date:yyyyMMdd)$(Rev:.r)
+
+variables:
+- template: .azure-pipelines/template-variables.yml
+- name: CACHE_MODE
+  value: none
+- name: ENABLE_FIPS
+  value: n
+- name: SONIC_BUILD_RETRY_COUNT
+  value: 0
+- name: SONIC_BUILD_RETRY_INTERVAL
+  value: 0
+
+stages:
+- stage: Build
+  displayName: Self-hosted otn-kvm build POC
+  pool:
+    name: ${{ parameters.agentPool }}
+  jobs:
+  - job: otn_kvm
+    displayName: Build target/sonic-otn-kvm.img.gz
+    timeoutInMinutes: 1440
+    steps:
+    - checkout: none
+
+    - bash: |
+        set -euo pipefail
+        if [ -z "${GITHUB_TOKEN:-}" ]; then
+          echo "GITHUB_TOKEN pipeline secret is required for private GitHub submodules."
+          exit 2
+        fi
+        git config --global url."https://x-access-token:${GITHUB_TOKEN}@github.com/".insteadOf "https://github.com/"
+      displayName: Configure GitHub auth for private submodules
+      workingDirectory: $(Pipeline.Workspace)
+      env:
+        GITHUB_TOKEN: $(GITHUB_TOKEN)
+
+    - bash: |
+        set -euxo pipefail
+        build_dir="$(Pipeline.Workspace)/sonic-buildimage-$(Build.BuildId)-$(System.JobAttempt)"
+        rm -rf "${build_dir}"
+        git clone --no-recurse-submodules "$(Build.Repository.Uri)" "${build_dir}"
+        cd "${build_dir}"
+        echo "Build.Reason=$(Build.Reason)"
+        echo "Build.SourceBranch=$(Build.SourceBranch)"
+        echo "Build.SourceVersion=$(Build.SourceVersion)"
+        git fetch --no-tags origin "+$(Build.SourceBranch):refs/remotes/origin/azure-source" || true
+        git checkout -f "$(Build.SourceVersion)" || git checkout -f refs/remotes/origin/azure-source
+        git submodule sync --recursive
+        git submodule update --init --recursive --jobs "$(nproc)"
+        git submodule status --recursive
+        echo "##vso[task.setvariable variable=SONIC_BUILD_DIR]${build_dir}"
+      displayName: Fresh clone and initialize submodules
+      workingDirectory: $(Pipeline.Workspace)
+
+    - bash: |
+        set -euxo pipefail
+        cd "$(SONIC_BUILD_DIR)"
+        make init
+      displayName: make init
+      workingDirectory: $(Pipeline.Workspace)
+
+    - bash: |
+        set -euxo pipefail
+        cd "$(SONIC_BUILD_DIR)"
+        modprobe overlay || true
+        echo 1 > /proc/sys/vm/compact_memory || true
+        BUILD_OPTIONS="${{ parameters.buildOptions }} SONIC_BUILD_JOBS=$(nproc)"
+        make PLATFORM=${{ parameters.platform }} PLATFORM_ARCH=amd64 ${BUILD_OPTIONS} configure
+      displayName: make configure PLATFORM=${{ parameters.platform }}
+      workingDirectory: $(Pipeline.Workspace)
+
+    - bash: |
+        set -euxo pipefail
+        cd "$(SONIC_BUILD_DIR)"
+        BUILD_OPTIONS="${{ parameters.buildOptions }} SONIC_BUILD_JOBS=$(nproc)"
+        make ${BUILD_OPTIONS} ${{ parameters.buildTarget }}
+        test -f "${{ parameters.buildTarget }}"
+      displayName: make ${{ parameters.buildTarget }}
+      workingDirectory: $(Pipeline.Workspace)
+
+    - bash: |
+        set -euxo pipefail
+        cd "$(SONIC_BUILD_DIR)"
+        mkdir -p "$(Build.ArtifactStagingDirectory)/target"
+        if [ -f "${{ parameters.buildTarget }}" ]; then
+          cp -av "${{ parameters.buildTarget }}" "$(Build.ArtifactStagingDirectory)/target/"
+          cp -av "${{ parameters.buildTarget }}.log" "$(Build.ArtifactStagingDirectory)/target/" 2>/dev/null || true
+        else
+          echo "Build target not found: ${{ parameters.buildTarget }}"
+          exit 1
+        fi
+      displayName: Stage otn-kvm image
+      workingDirectory: $(Pipeline.Workspace)
+      condition: succeededOrFailed()
+
+    - publish: $(Build.ArtifactStagingDirectory)
+      artifact: sonic-buildimage.otn-kvm
+      displayName: Archive otn-kvm image
+      condition: succeededOrFailed()
+
+    - bash: |
+        set -euo pipefail
+        git config --global --unset-all url."https://x-access-token:${GITHUB_TOKEN}@github.com/".insteadOf || true
+      displayName: Remove GitHub auth rewrite
+      workingDirectory: $(Pipeline.Workspace)
+      condition: always()
+      env:
+        GITHUB_TOKEN: $(GITHUB_TOKEN)
