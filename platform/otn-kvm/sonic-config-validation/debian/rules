@@ -1,0 +1,10 @@
+#!/usr/bin/make -f
+%:
+	dh $@
+
+override_dh_auto_install:
+	install -d debian/sonic-config-validation/usr/bin
+	install -m 755 cvl-gen-yin.sh \
+		debian/sonic-config-validation/usr/bin/cvl-gen-yin.sh
+	install -m 755 start.sh \
+		debian/sonic-config-validation/usr/bin/start.sh

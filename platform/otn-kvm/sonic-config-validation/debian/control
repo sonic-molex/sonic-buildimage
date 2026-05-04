@@ -1,0 +1,18 @@
+Source: sonic-config-validation
+Section: net
+Priority: optional
+Maintainer: SONiC Team <sonic-dev@lists.sonic.net>
+Build-Depends: debhelper (>= 12)
+Standards-Version: 4.5.1
+Homepage: https://github.com/sonic-net/sonic-buildimage
+
+Package: sonic-config-validation
+Architecture: all
+Depends: ${misc:Depends},
+         sonic-mgmt-common
+Description: CVL YIN schema generation scripts for SONiC management framework
+ Ships cvl-gen-yin.sh and start.sh to /usr/bin/. At container startup,
+ cvl-gen-yin.sh reads platform-specific YANG deviations from
+ /usr/share/sonic/platform/cvl-yang, compiles them to YIN via pyang, and
+ places results under /usr/sbin/schema/platform/<platform_asic>/ so CVL can
+ load them before mgmt-framework starts.

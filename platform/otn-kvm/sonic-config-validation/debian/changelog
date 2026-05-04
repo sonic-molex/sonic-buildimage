@@ -1,0 +1,8 @@
+sonic-config-validation (1.0.0) unstable; urgency=low
+
+  * Initial release
+  * OTN device-specific YANG deviation schemas for CVL range validation
+  * Schemas installed to /usr/sbin/schema/platform/<device-name>/
+  * Add override_dh_auto_clean to remove build/ before each compile
+
+ -- Molex <jichen.dou@molex.com>  Mon, 04 May 2026 00:00:00 +0000

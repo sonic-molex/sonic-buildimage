@@ -1,0 +1,19 @@
+module sonic-otn-config-validation {
+    namespace "http://github.com/Azure/sonic-otn-config-validation";
+    prefix "sonic-otn-cv";
+
+    import sonic-optical-amplifier { prefix sopt-amp; }
+
+    revision "2026-04-29" {
+        description "Add range constraints to OTN optical amplifier leaves.";
+    }
+
+    deviation "/sopt-amp:sonic-optical-amplifier/sopt-amp:OTN_OA/sopt-amp:OTN_OA_LIST/sopt-amp:target-gain-tilt" {
+        deviate replace {
+            type decimal64 {
+                fraction-digits 2;
+                range "-2.00..0.00";
+            }
+        }
+    }
+}

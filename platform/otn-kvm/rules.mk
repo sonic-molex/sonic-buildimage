@@ -12,6 +12,7 @@ include $(PLATFORM_PATH)/one-image.mk
 include $(PLATFORM_PATH)/onie.mk
 include $(PLATFORM_PATH)/kvm-image.mk
 include $(PLATFORM_PATH)/raw-image.mk
+include $(PLATFORM_PATH)/sonic-config-validation.mk
 
 SONIC_ALL += $(SONIC_ONE_IMAGE) $(SONIC_KVM_IMAGE) $(SONIC_RAW_IMAGE)
 
@@ -23,3 +24,6 @@ $(DOCKER_PLATFORM_MONITOR)_DEPENDS += $(OTN_KVM_HALCLIENT_DEB)
 
 # Inject OTN event profile into docker-eventd (overwrites upstream default.json)
 $(DOCKER_EVENTD)_DEPENDS += $(SONIC_EVENTD_OTN_PROFILE)
+
+# Inject OTN device-level YANG deviation schemas into mgmt-framework container
+$(DOCKER_MGMT_FRAMEWORK)_DEPENDS += $(SONIC_CONFIG_VALIDATION)
