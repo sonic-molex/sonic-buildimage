@@ -26,7 +26,7 @@ parameters:
 name: selfhosted_$(Build.SourceBranchName)_$(Date:yyyyMMdd)$(Rev:.r)
 
 variables:
-- template: .azure-pipelines/template-variables.yml
+- template: template-variables.yml
 - name: CACHE_MODE
   value: none
 - name: ENABLE_FIPS
