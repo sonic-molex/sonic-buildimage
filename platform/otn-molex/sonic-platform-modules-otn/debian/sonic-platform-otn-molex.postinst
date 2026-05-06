@@ -1,0 +1,19 @@
+#!/bin/sh
+set -e
+
+# Install sonic_platform Python module from the platform wheel.
+# The wheel is installed to the fixed device directory by
+# sonic-platform-otn-molex.install.
+WHL="/usr/share/sonic/device/x86_64-ols_ila_2.0-r0/sonic_platform-1.0-py3-none-any.whl"
+
+if [ -f "$WHL" ]; then
+    pip3 install --force-reinstall -q \
+        --break-system-packages \
+        --root-user-action=ignore \
+        "$WHL" || \
+    pip3 install --force-reinstall -q "$WHL"
+else
+    echo "WARNING: sonic_platform wheel not found, watchdogutil may not work" >&2
+fi
+
+#DEBHELPER#

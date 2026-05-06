@@ -1,5 +1,5 @@
 HALSERVER_VERSION = 1.1.0
 MOLEX_HALSERVER_DEB = libhal-mlx-otn-molex-$(HALSERVER_VERSION)-amd64.deb
-$(MOLEX_HALSERVER_DEB)_URL = "$(OTN_LIBS_RELEASE_URL)/$(MOLEX_HALSERVER_DEB)"
+$(MOLEX_HALSERVER_DEB)_URL = "https://raw.githubusercontent.com/sonic-molex/sonic-libmlx/refs/heads/otn/$(MOLEX_HALSERVER_DEB)"
 
 SONIC_ONLINE_DEBS += $(MOLEX_HALSERVER_DEB)

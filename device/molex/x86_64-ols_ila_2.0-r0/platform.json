@@ -1,50 +1,140 @@
 {
     "chassis": {
         "components": [],
-        "fan_drawers": {
-            "fans": [
-                {
-                    "name": "FanTray0-Fan0",
-                    "speed": {
-                        "controllable": true
+        "fan_drawers": [
+            {
+                "name": "FanTray0",
+                "fans": [
+                    {
+                        "name": "FanTray0-Fan0",
+                        "speed": {
+                            "controllable": true
+                        },
+                        "status_led": {
+                            "status_led": true
+                        }
                     },
-                    "status_led": {
-                        "status_led": true
-                    }
-                },
-                {
-                    "name": "FanTray1-Fan1",
-                    "speed": {
-                        "controllable": true
+                    {
+                        "name": "FanTray0-Fan1",
+                        "speed": {
+                            "controllable": true
+                        },
+                        "status_led": {
+                            "status_led": true
+                        }
                     },
-                    "status_led": {
-                        "status_led": true
-                    }
-                },
-                {
-                    "name": "FanTray2-Fan2",
-                    "speed": {
-                        "controllable": true
+                    {
+                        "name": "FanTray0-Fan2",
+                        "speed": {
+                            "controllable": true
+                        },
+                        "status_led": {
+                            "status_led": true
+                        }
                     },
-                    "status_led": {
-                        "status_led": true
+                    {
+                        "name": "FanTray0-Fan3",
+                        "speed": {
+                            "controllable": true
+                        },
+                        "status_led": {
+                            "status_led": true
+                        }
                     }
-                },
-                {
-                    "name": "FanTray3-Fan3",
-                    "speed": {
-                        "controllable": true
-                    },
-                    "status_led": {
-                        "status_led": true
-                    }
+                ],
+                "status_led": {
+                    "controllable": true
                 }
-            ],
-            "name": "FanTray0",
-            "status_led": {
-                "controllable": true
+            },
+            {
+                "name": "FanTray1",
+                "fans": [
+                    {
+                        "name": "FanTray1-Fan0",
+                        "speed": {
+                            "controllable": true
+                        },
+                        "status_led": {
+                            "status_led": true
+                        }
+                    },
+                    {
+                        "name": "FanTray1-Fan1",
+                        "speed": {
+                            "controllable": true
+                        },
+                        "status_led": {
+                            "status_led": true
+                        }
+                    },
+                    {
+                        "name": "FanTray1-Fan2",
+                        "speed": {
+                            "controllable": true
+                        },
+                        "status_led": {
+                            "status_led": true
+                        }
+                    },
+                    {
+                        "name": "FanTray1-Fan3",
+                        "speed": {
+                            "controllable": true
+                        },
+                        "status_led": {
+                            "status_led": true
+                        }
+                    }
+                ],
+                "status_led": {
+                    "controllable": true
+                }
+            },
+            {
+                "name": "FanTray2",
+                "fans": [
+                    {
+                        "name": "FanTray2-Fan0",
+                        "speed": {
+                            "controllable": true
+                        },
+                        "status_led": {
+                            "status_led": true
+                        }
+                    },
+                    {
+                        "name": "FanTray2-Fan1",
+                        "speed": {
+                            "controllable": true
+                        },
+                        "status_led": {
+                            "status_led": true
+                        }
+                    },
+                    {
+                        "name": "FanTray2-Fan2",
+                        "speed": {
+                            "controllable": true
+                        },
+                        "status_led": {
+                            "status_led": true
+                        }
+                    },
+                    {
+                        "name": "FanTray2-Fan3",
+                        "speed": {
+                            "controllable": true
+                        },
+                        "status_led": {
+                            "status_led": true
+                        }
+                    }
+                ],
+                "status_led": {
+                    "controllable": true
+                }
             }
-        },
+        ],
         "modules": [
             {
                 "components": [

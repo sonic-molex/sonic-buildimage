@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 #############################################################################
-# OTN-KVM
+# OTN-molex-ila
 #
 # Module contains an implementation of SONiC Platform Base API and
 # provides the platformi information
@@ -13,6 +13,7 @@ try:
     import os
     import re
     import time
+    import syslog
     from sonic_py_common import device_info
     from sonic_platform_base.device_base import DeviceBase
     from sonic_platform_base.chassis_base import ChassisBase
@@ -30,7 +31,7 @@ except ImportError as e:
 
 class Chassis(ChassisBase):
     """
-    OTN-KVM Platform-specific Chassis class
+    OTN-molex-ila Platform-specific Chassis class
     """
 
     def __init__(self):
@@ -38,8 +39,9 @@ class Chassis(ChassisBase):
         ChassisBase.__init__(self)
 
         # Initialize HAL
+        syslog.syslog(syslog.LOG_INFO, 'start Initializing HAL')
         if not Initialize():
-            print('HAL init failed.')
+            syslog.syslog(syslog.LOG_ERR, 'HAL init failed.')
 
         # Get chassis device list
         self.desc = device_info.get_platform_json_data()
@@ -49,9 +51,10 @@ class Chassis(ChassisBase):
             module = Module(item)
             self._module_list.append(module)
 
-        fandrawer = FanDrawer(self.desc['chassis']['fan_drawers'])
-        self._fan_drawer_list.append(fandrawer)
-        self._fan_list.extend(fandrawer._fan_list)
+        for item in self.desc['chassis']['fan_drawers']:
+            fandrawer = FanDrawer(item)
+            self._fan_drawer_list.append(fandrawer)
+            self._fan_list.extend(fandrawer._fan_list)
 
         for item in self.desc['chassis']['psus']:
             psu = Psu(item)
@@ -65,8 +68,8 @@ class Chassis(ChassisBase):
             component = Component(item)
             self._component_list.append(component)
 
-    def __del__(self):
-        Destroy()
+        self._watchdog = Watchdog()
+
 
     def get_name(self):
         """
@@ -341,3 +344,12 @@ class Chassis(ChassisBase):
                       status='6' Bad cable.
         """
         return (False, {})
+
+    def get_watchdog(self):
+        """
+        Retrives the hardware watchdog object
+        Returns:
+            An object derived from WatchdogBase representing the hardware
+            watchdog
+        """
+        return self._watchdog

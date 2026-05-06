@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 ########################################################################
-# OTN-KVM
+# OTN-molex-ila
 #
 # Module contains an implementation of SONiC Platform Base API and
 # provides the Fans' information which are available in the platform.
@@ -9,6 +9,7 @@
 ########################################################################
 
 import os.path
+import syslog
 
 try:
     from sonic_platform_base.device_base import DeviceBase
@@ -19,7 +20,7 @@ except ImportError as e:
 
 
 class Fan(FanBase):
-    """OTN-KVM Platform-specific Fan class"""
+    """OTN-molex-ila Platform-specific Fan class"""
 
     def __init__(self, desc):
         FanBase.__init__(self)
@@ -81,7 +82,8 @@ class Fan(FanBase):
             bool: True if set success, False if fail.
         """
         # Fan speeds are controlled by Smart-fussion FPGA.
-        return FanSetSpeed(self.name, speed)
+        syslog.syslog(syslog.LOG_INFO, "Fan: %s, FanSetSpeed: %s" % (self.name, speed))
+        return FanSetSubIndexSpeed(self.name, speed)
 
     def set_status_led(self, color):
         """

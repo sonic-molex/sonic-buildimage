@@ -1,11 +1,12 @@
 ########################################################################
 #
-# OTN-KVM
+# OTN-molex-ila
 #
 # Abstract base class for implementing a platform-specific class with
 # which to interact with a hardware watchdog module in SONiC
 #
 ########################################################################
+import syslog
 
 try:
     from sonic_platform_base.watchdog_base import WatchdogBase
@@ -16,11 +17,11 @@ except ImportError as e:
 
 class Watchdog(WatchdogBase):
     """
-    Abstract base class for interfacing with a hardware watchdog module
+    OTN-molex-ila Platform-specific Watchdog class
     """
 
     def __init__(self):
-        print("INFO: Watchdog __init__")
+        pass
 
     def arm(self, seconds):
         """
@@ -35,8 +36,10 @@ class Watchdog(WatchdogBase):
             An integer specifying the *actual* number of seconds the watchdog
             was armed with. On failure returns -1.
         """
-        print("ERROR: Platform did not implement arm()")
-        return -1
+        result = WatchDogArm(0, seconds)
+        if result is None:
+            return -1
+        return result
 
     def disarm(self):
         """
@@ -45,8 +48,7 @@ class Watchdog(WatchdogBase):
         Returns:
             A boolean, True if watchdog is disarmed successfully, False if not
         """
-        print("ERROR: Platform did not implement disarm()")
-        return False
+        return WatchDogDisrm(0)
 
     def is_armed(self):
         """
@@ -55,8 +57,7 @@ class Watchdog(WatchdogBase):
         Returns:
             A boolean, True if watchdog is armed, False if not
         """
-        print("ERROR: Platform did not implement is_armed()")
-        return False
+        return WatchDogIsArmed(0)
 
     def get_remaining_time(self):
         """
@@ -67,5 +68,5 @@ class Watchdog(WatchdogBase):
             An integer specifying the number of seconds remaining on thei
             watchdog timer. If the watchdog is not armed, returns -1.
         """
-        print("ERROR: Platform did not implement get_remaining_time()")
+        # HalPlatformApi does not currently provide a way to get remaining time
         return -1

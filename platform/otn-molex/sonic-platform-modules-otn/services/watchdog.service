@@ -1,0 +1,16 @@
+[Unit]
+Description=Arm watchdog for 6 minutes
+
+After=syncd.service
+Requires=syncd.service
+StartLimitIntervalSec=120s
+StartLimitBurst=10
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/watchdogutil arm -s 360
+Restart=on-failure
+RestartSec=10s
+
+[Install]
+WantedBy=multi-user.target

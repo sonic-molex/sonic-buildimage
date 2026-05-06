@@ -21,5 +21,4 @@ class ThermalManager(ThermalManagerBase):
     def init_thermal_algorithm(cls, chassis):
         """Set all fans to 50% at startup."""
         for fan in chassis.get_all_fans():
-            print(f"Setting fan {fan.get_name()} to 50%")
             fan.set_speed(50)

@@ -1,0 +1,11 @@
+# watchdog.timer
+[Unit]
+Description=Arm watchdog immediately on boot and every minute
+
+[Timer]
+Unit=watchdog.service
+OnUnitActiveSec=1min
+OnBootSec=0
+
+[Install]
+WantedBy=timers.target
