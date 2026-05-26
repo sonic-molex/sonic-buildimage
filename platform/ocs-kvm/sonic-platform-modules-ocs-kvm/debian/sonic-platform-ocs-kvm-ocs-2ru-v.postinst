@@ -1,0 +1,44 @@
+#!/bin/bash
+##
+## Post-installation script for sonic-platform-ocs-kvm-ocs-2ru-v
+##
+## This script initializes the PD card calibration tables for OCS-2RU virtual device.
+## Called automatically by dpkg during package installation.
+##
+## Device files (including init_pd_card.sh and pd_card/*.bin) are installed by
+## sonic-device-data package. This postinst just triggers the initialization.
+##
+
+set -e
+
+case "$1" in
+    configure)
+        # Platform and HWSKU are fixed for this package
+        PLATFORM="x86_64-ocs-kvm_68x68-r0"
+        HWSKU="OCS-2RU-V"
+        
+        HWSKU_DIR="/usr/share/sonic/device/${PLATFORM}/${HWSKU}"
+        INIT_SCRIPT="${HWSKU_DIR}/init_pd_card.sh"
+
+        # Run init_pd_card.sh if it exists (installed by sonic-device-data)
+        if [ -f "${INIT_SCRIPT}" ]; then
+            echo "Initializing PD card calibration tables for ${HWSKU}..."
+            PLATFORM="${PLATFORM}" HWSKU="${HWSKU}" "${INIT_SCRIPT}" || true
+        else
+            echo "Warning: init_pd_card.sh not found at ${INIT_SCRIPT}"
+            echo "Calibration tables may not be initialized."
+        fi
+        ;;
+
+    abort-upgrade|abort-remove|abort-deconfigure)
+        ;;
+
+    *)
+        echo "postinst called with unknown argument \`$1'" >&2
+        exit 1
+        ;;
+esac
+
+#DEBHELPER#
+
+exit 0

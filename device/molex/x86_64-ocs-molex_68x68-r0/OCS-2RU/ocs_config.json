@@ -1,0 +1,548 @@
+{
+  "OCS_PORT": {
+    "1A": {
+      "label": "ingress_port1",
+      "config_status": "normal"
+    },
+    "1B": {
+      "label": "egress_port1",
+      "config_status": "normal"
+    },
+    "2A": {
+      "label": "ingress_port2",
+      "config_status": "normal"
+    },
+    "2B": {
+      "label": "egress_port2",
+      "config_status": "normal"
+    },
+    "3A": {
+      "label": "ingress_port3",
+      "config_status": "normal"
+    },
+    "3B": {
+      "label": "egress_port3",
+      "config_status": "normal"
+    },
+    "4A": {
+      "label": "ingress_port4",
+      "config_status": "normal"
+    },
+    "4B": {
+      "label": "egress_port4",
+      "config_status": "normal"
+    },
+    "5A": {
+      "label": "ingress_port5",
+      "config_status": "normal"
+    },
+    "5B": {
+      "label": "egress_port5",
+      "config_status": "normal"
+    },
+    "6A": {
+      "label": "ingress_port6",
+      "config_status": "normal"
+    },
+    "6B": {
+      "label": "egress_port6",
+      "config_status": "normal"
+    },
+    "7A": {
+      "label": "ingress_port7",
+      "config_status": "normal"
+    },
+    "7B": {
+      "label": "egress_port7",
+      "config_status": "normal"
+    },
+    "8A": {
+      "label": "ingress_port8",
+      "config_status": "normal"
+    },
+    "8B": {
+      "label": "egress_port8",
+      "config_status": "normal"
+    },
+    "9A": {
+      "label": "ingress_port9",
+      "config_status": "normal"
+    },
+    "9B": {
+      "label": "egress_port9",
+      "config_status": "normal"
+    },
+    "10A": {
+      "label": "ingress_port10",
+      "config_status": "normal"
+    },
+    "10B": {
+      "label": "egress_port10",
+      "config_status": "normal"
+    },
+    "11A": {
+      "label": "ingress_port11",
+      "config_status": "normal"
+    },
+    "11B": {
+      "label": "egress_port11",
+      "config_status": "normal"
+    },
+    "12A": {
+      "label": "ingress_port12",
+      "config_status": "normal"
+    },
+    "12B": {
+      "label": "egress_port12",
+      "config_status": "normal"
+    },
+    "13A": {
+      "label": "ingress_port13",
+      "config_status": "normal"
+    },
+    "13B": {
+      "label": "egress_port13",
+      "config_status": "normal"
+    },
+    "14A": {
+      "label": "ingress_port14",
+      "config_status": "normal"
+    },
+    "14B": {
+      "label": "egress_port14",
+      "config_status": "normal"
+    },
+    "15A": {
+      "label": "ingress_port15",
+      "config_status": "normal"
+    },
+    "15B": {
+      "label": "egress_port15",
+      "config_status": "normal"
+    },
+    "16A": {
+      "label": "ingress_port16",
+      "config_status": "normal"
+    },
+    "16B": {
+      "label": "egress_port16",
+      "config_status": "normal"
+    },
+    "17A": {
+      "label": "ingress_port17",
+      "config_status": "normal"
+    },
+    "17B": {
+      "label": "egress_port17",
+      "config_status": "normal"
+    },
+    "18A": {
+      "label": "ingress_port18",
+      "config_status": "normal"
+    },
+    "18B": {
+      "label": "egress_port18",
+      "config_status": "normal"
+    },
+    "19A": {
+      "label": "ingress_port19",
+      "config_status": "normal"
+    },
+    "19B": {
+      "label": "egress_port19",
+      "config_status": "normal"
+    },
+    "20A": {
+      "label": "ingress_port20",
+      "config_status": "normal"
+    },
+    "20B": {
+      "label": "egress_port20",
+      "config_status": "normal"
+    },
+    "21A": {
+      "label": "ingress_port21",
+      "config_status": "normal"
+    },
+    "21B": {
+      "label": "egress_port21",
+      "config_status": "normal"
+    },
+    "22A": {
+      "label": "ingress_port22",
+      "config_status": "normal"
+    },
+    "22B": {
+      "label": "egress_port22",
+      "config_status": "normal"
+    },
+    "23A": {
+      "label": "ingress_port23",
+      "config_status": "normal"
+    },
+    "23B": {
+      "label": "egress_port23",
+      "config_status": "normal"
+    },
+    "24A": {
+      "label": "ingress_port24",
+      "config_status": "normal"
+    },
+    "24B": {
+      "label": "egress_port24",
+      "config_status": "normal"
+    },
+    "25A": {
+      "label": "ingress_port25",
+      "config_status": "normal"
+    },
+    "25B": {
+      "label": "egress_port25",
+      "config_status": "normal"
+    },
+    "26A": {
+      "label": "ingress_port26",
+      "config_status": "normal"
+    },
+    "26B": {
+      "label": "egress_port26",
+      "config_status": "normal"
+    },
+    "27A": {
+      "label": "ingress_port27",
+      "config_status": "normal"
+    },
+    "27B": {
+      "label": "egress_port27",
+      "config_status": "normal"
+    },
+    "28A": {
+      "label": "ingress_port28",
+      "config_status": "normal"
+    },
+    "28B": {
+      "label": "egress_port28",
+      "config_status": "normal"
+    },
+    "29A": {
+      "label": "ingress_port29",
+      "config_status": "normal"
+    },
+    "29B": {
+      "label": "egress_port29",
+      "config_status": "normal"
+    },
+    "30A": {
+      "label": "ingress_port30",
+      "config_status": "normal"
+    },
+    "30B": {
+      "label": "egress_port30",
+      "config_status": "normal"
+    },
+    "31A": {
+      "label": "ingress_port31",
+      "config_status": "normal"
+    },
+    "31B": {
+      "label": "egress_port31",
+      "config_status": "normal"
+    },
+    "32A": {
+      "label": "ingress_port32",
+      "config_status": "normal"
+    },
+    "32B": {
+      "label": "egress_port32",
+      "config_status": "normal"
+    },
+    "33A": {
+      "label": "ingress_port33",
+      "config_status": "normal"
+    },
+    "33B": {
+      "label": "egress_port33",
+      "config_status": "normal"
+    },
+    "34A": {
+      "label": "ingress_port34",
+      "config_status": "normal"
+    },
+    "34B": {
+      "label": "egress_port34",
+      "config_status": "normal"
+    },
+    "35A": {
+      "label": "ingress_port35",
+      "config_status": "normal"
+    },
+    "35B": {
+      "label": "egress_port35",
+      "config_status": "normal"
+    },
+    "36A": {
+      "label": "ingress_port36",
+      "config_status": "normal"
+    },
+    "36B": {
+      "label": "egress_port36",
+      "config_status": "normal"
+    },
+    "37A": {
+      "label": "ingress_port37",
+      "config_status": "normal"
+    },
+    "37B": {
+      "label": "egress_port37",
+      "config_status": "normal"
+    },
+    "38A": {
+      "label": "ingress_port38",
+      "config_status": "normal"
+    },
+    "38B": {
+      "label": "egress_port38",
+      "config_status": "normal"
+    },
+    "39A": {
+      "label": "ingress_port39",
+      "config_status": "normal"
+    },
+    "39B": {
+      "label": "egress_port39",
+      "config_status": "normal"
+    },
+    "40A": {
+      "label": "ingress_port40",
+      "config_status": "normal"
+    },
+    "40B": {
+      "label": "egress_port40",
+      "config_status": "normal"
+    },
+    "41A": {
+      "label": "ingress_port41",
+      "config_status": "normal"
+    },
+    "41B": {
+      "label": "egress_port41",
+      "config_status": "normal"
+    },
+    "42A": {
+      "label": "ingress_port42",
+      "config_status": "normal"
+    },
+    "42B": {
+      "label": "egress_port42",
+      "config_status": "normal"
+    },
+    "43A": {
+      "label": "ingress_port43",
+      "config_status": "normal"
+    },
+    "43B": {
+      "label": "egress_port43",
+      "config_status": "normal"
+    },
+    "44A": {
+      "label": "ingress_port44",
+      "config_status": "normal"
+    },
+    "44B": {
+      "label": "egress_port44",
+      "config_status": "normal"
+    },
+    "45A": {
+      "label": "ingress_port45",
+      "config_status": "normal"
+    },
+    "45B": {
+      "label": "egress_port45",
+      "config_status": "normal"
+    },
+    "46A": {
+      "label": "ingress_port46",
+      "config_status": "normal"
+    },
+    "46B": {
+      "label": "egress_port46",
+      "config_status": "normal"
+    },
+    "47A": {
+      "label": "ingress_port47",
+      "config_status": "normal"
+    },
+    "47B": {
+      "label": "egress_port47",
+      "config_status": "normal"
+    },
+    "48A": {
+      "label": "ingress_port48",
+      "config_status": "normal"
+    },
+    "48B": {
+      "label": "egress_port48",
+      "config_status": "normal"
+    },
+    "49A": {
+      "label": "ingress_port49",
+      "config_status": "normal"
+    },
+    "49B": {
+      "label": "egress_port49",
+      "config_status": "normal"
+    },
+    "50A": {
+      "label": "ingress_port50",
+      "config_status": "normal"
+    },
+    "50B": {
+      "label": "egress_port50",
+      "config_status": "normal"
+    },
+    "51A": {
+      "label": "ingress_port51",
+      "config_status": "normal"
+    },
+    "51B": {
+      "label": "egress_port51",
+      "config_status": "normal"
+    },
+    "52A": {
+      "label": "ingress_port52",
+      "config_status": "normal"
+    },
+    "52B": {
+      "label": "egress_port52",
+      "config_status": "normal"
+    },
+    "53A": {
+      "label": "ingress_port53",
+      "config_status": "normal"
+    },
+    "53B": {
+      "label": "egress_port53",
+      "config_status": "normal"
+    },
+    "54A": {
+      "label": "ingress_port54",
+      "config_status": "normal"
+    },
+    "54B": {
+      "label": "egress_port54",
+      "config_status": "normal"
+    },
+    "55A": {
+      "label": "ingress_port55",
+      "config_status": "normal"
+    },
+    "55B": {
+      "label": "egress_port55",
+      "config_status": "normal"
+    },
+    "56A": {
+      "label": "ingress_port56",
+      "config_status": "normal"
+    },
+    "56B": {
+      "label": "egress_port56",
+      "config_status": "normal"
+    },
+    "57A": {
+      "label": "ingress_port57",
+      "config_status": "normal"
+    },
+    "57B": {
+      "label": "egress_port57",
+      "config_status": "normal"
+    },
+    "58A": {
+      "label": "ingress_port58",
+      "config_status": "normal"
+    },
+    "58B": {
+      "label": "egress_port58",
+      "config_status": "normal"
+    },
+    "59A": {
+      "label": "ingress_port59",
+      "config_status": "normal"
+    },
+    "59B": {
+      "label": "egress_port59",
+      "config_status": "normal"
+    },
+    "60A": {
+      "label": "ingress_port60",
+      "config_status": "normal"
+    },
+    "60B": {
+      "label": "egress_port60",
+      "config_status": "normal"
+    },
+    "61A": {
+      "label": "ingress_port61",
+      "config_status": "normal"
+    },
+    "61B": {
+      "label": "egress_port61",
+      "config_status": "normal"
+    },
+    "62A": {
+      "label": "ingress_port62",
+      "config_status": "normal"
+    },
+    "62B": {
+      "label": "egress_port62",
+      "config_status": "normal"
+    },
+    "63A": {
+      "label": "ingress_port63",
+      "config_status": "normal"
+    },
+    "63B": {
+      "label": "egress_port63",
+      "config_status": "normal"
+    },
+    "64A": {
+      "label": "ingress_port64",
+      "config_status": "normal"
+    },
+    "64B": {
+      "label": "egress_port64",
+      "config_status": "normal"
+    },
+    "65A": {
+      "label": "ingress_port65",
+      "config_status": "normal"
+    },
+    "65B": {
+      "label": "egress_port65",
+      "config_status": "normal"
+    },
+    "66A": {
+      "label": "ingress_port66",
+      "config_status": "normal"
+    },
+    "66B": {
+      "label": "egress_port66",
+      "config_status": "normal"
+    },
+    "67A": {
+      "label": "ingress_port67",
+      "config_status": "normal"
+    },
+    "67B": {
+      "label": "egress_port67",
+      "config_status": "normal"
+    },
+    "68A": {
+      "label": "ingress_port68",
+      "config_status": "normal"
+    },
+    "68B": {
+      "label": "egress_port68",
+      "config_status": "normal"
+    }
+  }
+}

@@ -146,5 +146,7 @@ if [ ! -z "$USER_AUTH" ] && [  $USER_AUTH != "null" ] && [  $USER_AUTH != "none"
     fi
 fi
 
+TELEMETRY_ARGS+=" -gnmi_translib_write"
+
 echo "gnmi args: $TELEMETRY_ARGS"
 exec /usr/sbin/telemetry ${TELEMETRY_ARGS}

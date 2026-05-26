@@ -1,0 +1,21 @@
+Source: ocs-led-daemon
+Section: net
+Priority: optional
+Maintainer: Lu Mao <lu.mao@molex.com>
+Build-Depends: debhelper-compat (= 13),
+               dh-python,
+               python3-all,
+               python3-setuptools
+Standards-Version: 4.6.2
+Homepage: https://github.com/Azure/sonic-buildimage
+
+Package: ocs-led-daemon
+Architecture: all
+Depends: ${misc:Depends},
+         ${python3:Depends},
+         python3,
+         python3-swsscommon
+Description: OCS LED Daemon for SONiC
+ Alarm-driven LED control daemon for Molex OCS 68x68 platform.
+ Monitors alarm events from EVENT_DB and controls LEDs based on
+ alarm severity through platform-specific led_control plugin.

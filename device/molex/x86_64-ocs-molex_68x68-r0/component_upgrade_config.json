@@ -1,0 +1,34 @@
+{
+    "component_type_name_mapping": [
+          {"type": "DC", "component_name_list": ["DC0-0", "DC1-0", "DC2-0", "DC3-0"]},
+          {"type": "OPC", "component_name_list": ["OPC0-0"]},
+          {"type": "CPLD", "component_name_list": ["CPLD-FPC", "CPLD"]},
+          {"type": "FPGA", "component_name_list": ["FPGA"]}
+    ],
+    "component_type_list": {
+        "DC": {
+            "component_class": "ComponentGeneral",
+            "upgrade_workflow_flag": [true, false, false, false],
+            "upgrade_time_max": 60,
+            "reset_time_max": 20
+        },
+        "OPC": {
+            "component_class": "ComponentGeneral",
+            "upgrade_workflow_flag": [true, false, false, false],
+            "upgrade_time_max": 60,
+            "reset_time_max": 20
+        },
+        "CPLD": {
+            "component_class": "ComponentLogic",
+            "upgrade_workflow_flag": [true, false, true, false],
+            "upgrade_time_max": 300,
+            "reset_time_max": 30
+        },
+        "FPGA": {
+            "component_class": "ComponentLogic",
+            "upgrade_workflow_flag": [true, false, true, false],
+            "upgrade_time_max": 300,
+            "reset_time_max": 30
+        }
+    }
+}

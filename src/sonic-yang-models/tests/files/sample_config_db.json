@@ -3246,6 +3246,12 @@
                 "guard_time": "2",
                 "ber_threshold": "12"
             }
+        },
+        "OCS_PORT": {
+            "1A": {
+                "label": "ingress_port1",
+                "config_status": "normal"
+            }
         }
     },
     "SAMPLE_CONFIG_DB_UNKNOWN": {

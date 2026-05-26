@@ -1,0 +1,24 @@
+[Unit]
+Description=Inject OCS LED Daemon into pmon container
+Documentation=https://github.com/Azure/sonic-buildimage
+After=pmon.service
+PartOf=pmon.service
+# Wait for pmon container to be fully started
+After=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/sbin/inject_ocs_ledd.sh
+RemainAfterExit=yes
+# Do not retry on failure to avoid triggering pmon prematurely during boot
+# The postinst script handles immediate injection if pmon is already running
+Restart=no
+TimeoutStartSec=60
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=pmon-inject-ocs-ledd
+
+[Install]
+WantedBy=pmon.service

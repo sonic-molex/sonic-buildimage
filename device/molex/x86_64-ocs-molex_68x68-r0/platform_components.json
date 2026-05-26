@@ -1,0 +1,67 @@
+{
+    "chassis": {
+        "OCS": {
+            "component": {}
+        }
+    },
+    "module": {
+        "LINE-CARD0": {
+            "component": {
+                "DC0-0": {
+                    "firmware": "/usr/share/sonic/device/x86_64-ocs-molex_68x68-r0/latest_firmware/ds2a_ocs68_dc_0.01.0038.bin",
+                    "version": "0.01.0038"
+                }
+            }
+        },
+        "LINE-CARD1": {
+            "component": {
+                "DC1-0": {
+                    "firmware": "/usr/share/sonic/device/x86_64-ocs-molex_68x68-r0/latest_firmware/ds2a_ocs68_dc_0.01.0038.bin",
+                    "version": "0.01.0038"
+                }
+            }
+        },
+        "LINE-CARD2": {
+            "component": {
+                "DC2-0": {
+                    "firmware": "/usr/share/sonic/device/x86_64-ocs-molex_68x68-r0/latest_firmware/ds2a_ocs68_dc_0.01.0038.bin",
+                    "version": "0.01.0038"
+                }
+            }
+        },
+        "LINE-CARD3": {
+            "component": {
+                "DC3-0": {
+                    "firmware": "/usr/share/sonic/device/x86_64-ocs-molex_68x68-r0/latest_firmware/ds2a_ocs68_dc_0.01.0038.bin",
+                    "version": "0.01.0038"
+                }
+            }
+        },
+        "LINE-CARD4": {
+            "component": {
+                "OPC0-0": {
+                    "firmware": "/usr/share/sonic/device/x86_64-ocs-molex_68x68-r0/latest_firmware/ds2a_ocs68_opc_0.01.0037.bin",
+                    "version": "0.01.0037"
+                }
+            }
+        },
+        "SUPERVISOR0": {
+            "component": {
+                "BIOS": {},
+                "CPLD-FPC": {
+                    "firmware": "/usr/share/sonic/device/x86_64-ocs-molex_68x68-r0/latest_firmware/ds2a_ocs68_fpc_cpld_0.01.0005.bit",
+                    "version": "0.01.0005"
+                },
+                "CPLD": {
+                    "firmware": "/usr/share/sonic/device/x86_64-ocs-molex_68x68-r0/latest_firmware/ds2a_ocs68_scc_cpld_0.01.0005.bit",
+                    "version": "0.01.0005"
+                },
+                "FPGA": {
+                    "firmware": "/usr/share/sonic/device/x86_64-ocs-molex_68x68-r0/latest_firmware/ds2a_ocs68_scc_fpga_0.01.0006.bin",
+                    "version": "0.01.0006"
+                },
+                "ONIE": {}
+            }
+        }
+    }
+}

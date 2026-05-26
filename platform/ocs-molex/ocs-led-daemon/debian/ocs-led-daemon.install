@@ -1,0 +1,14 @@
+# Debian install file for ocs-led-daemon
+# Format: <source_path> <destination_path>
+#
+# This file maps source files from the build directory to their
+# installation destinations in the target system.
+
+# Supervisord configuration for pmon container
+pmon/ocs-ledd.conf etc/sonic/pmon/
+
+# Injection script for dynamic deployment to pmon container
+util/inject_ocs_ledd.sh usr/sbin/
+
+# Systemd service for pmon injection
+service/pmon-inject-ocs-ledd.service lib/systemd/system/

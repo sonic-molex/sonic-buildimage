@@ -1,0 +1,6 @@
+[Match]
+Path=pci-0000:01:00.3
+Driver=igb
+
+[Link]
+Name=eth3

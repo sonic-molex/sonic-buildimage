@@ -1,0 +1,17 @@
+{
+    "yang_module": "sonic-events-platform",
+    "proclist": [
+        {
+            "name": "syncd",
+            "parse_json": "board_regex.json"
+        },
+        {
+            "name": "syncd",
+            "parse_json": "ocs_regex.json"
+        },
+        {
+            "name": "sshd",
+            "parse_json": "security_regex.json"
+        }
+    ]
+}

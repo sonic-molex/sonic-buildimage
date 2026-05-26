@@ -1,0 +1,2 @@
+#DPKG FRK
+$(MOLEX_LIBSAI_DEB)_CACHE_MODE  := none

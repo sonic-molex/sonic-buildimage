@@ -1,0 +1,4 @@
+sonic-platform-modules-molex (1.1) unstable; urgency=low
+  * Initial release: Support SONiC platform API for molex devices.
+
+ -- Molex <lu.mao@molex.com>  Fri, 4 Apr 2025 16:00:00 +0800

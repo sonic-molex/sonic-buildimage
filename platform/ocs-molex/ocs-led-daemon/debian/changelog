@@ -1,0 +1,8 @@
+ocs-led-daemon (1.0.0) unstable; urgency=low
+
+  * Initial release for OCS LED daemon
+  * Alarm-driven LED control for Molex OCS 68x68 platform
+  * Support EVENT_DB ALARM table monitoring
+  * Support alarm aggregation and LED state management
+
+ -- Lu Mao <lu.mao@molex.com>  Tue, 27 Jan 2026 10:00:00 +0800

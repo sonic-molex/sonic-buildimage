@@ -1,0 +1,12 @@
+[
+    {
+        "tag": "PORT_STATUS_CHANGE",
+        "regex": ".*OCS_EVENT (PORT_STATUS_CHANGE) port:(\\S+) status:(\\S+) connection:(\\S+) (.*)",
+        "params": [ "type-id", "port-id", "status", "connection-id", "text" ]
+    },
+    {
+        "tag": "PORT_FORCED_BLOCK",
+        "regex": ".*OCS_EVENT (PORT_FORCED_BLOCK) port:(\\S+) connection:(\\S+) (.*)",
+        "params": [ "type-id", "port-id", "connection-id", "text" ]
+    }
+]

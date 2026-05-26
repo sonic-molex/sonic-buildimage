@@ -1,0 +1,50 @@
+#!/usr/bin/make -f
+
+export INSTALL_MOD_DIR:=extra
+
+PACKAGE_NAME := sonic-platform-molex
+KVERSION     ?= $(shell uname -r)
+KERNEL_SRC   :=  /lib/modules/$(KVERSION)
+PLATFORM_DIR := $(shell pwd)
+MODULES_SRC  := $(PLATFORM_DIR)/modules
+XDMA_SRC     := $(MODULES_SRC)/dma_ip_drivers/XDMA/linux-kernel/xdma
+MODULE_DIRS  := ocs
+
+%:
+	dh $@ --with python3
+
+override_dh_auto_build:
+	make -C $(KERNEL_SRC)/build M=$(MODULES_SRC)
+	make -C $(KERNEL_SRC)/build M=$(XDMA_SRC) KERNEL_SRC=$(KERNEL_SRC)
+	(for mod in $(MODULE_DIRS); do \
+		cd $(PLATFORM_DIR)/$${mod}; \
+		if [ -f setup.py ]; then \
+			python3 setup.py bdist_wheel -d $(PLATFORM_DIR)/$${mod}; \
+			echo "Finished making whl package for $${mod}"; \
+		fi; \
+	done)
+
+override_dh_auto_install:
+	dh_installdirs -p$(PACKAGE_NAME) $(KERNEL_SRC)/$(INSTALL_MOD_DIR)
+	cp $(MODULES_SRC)/*.ko debian/$(PACKAGE_NAME)/$(KERNEL_SRC)/$(INSTALL_MOD_DIR)
+	cp $(XDMA_SRC)/*.ko debian/$(PACKAGE_NAME)/$(KERNEL_SRC)/$(INSTALL_MOD_DIR)
+	(for mod in $(MODULE_DIRS); do \
+		cd $(PLATFORM_DIR)/$${mod}; \
+		python3 setup.py install --root=$(PLATFORM_DIR)/debian/$(PACKAGE_NAME) --install-layout=deb; \
+	done)
+	dh_installdirs -p$(PACKAGE_NAME) /etc/systemd/network
+	cp $(PLATFORM_DIR)/systemd-network/*.link debian/$(PACKAGE_NAME)/etc/systemd/network/
+
+override_dh_usrlocal:
+
+override_dh_pysupport:
+
+override_dh_clean:
+	dh_clean
+	rm -f $(MODULES_SRC)/*.o $(MODULES_SRC)/*.ko $(MODULES_SRC)/*.mod $(MODULES_SRC)/*.mod.c $(MODULES_SRC)/.*.cmd
+	rm -f $(MODULES_SRC)/Module.markers $(MODULES_SRC)/Module.symvers $(MODULES_SRC)/modules.order
+	rm -rf $(MODULES_SRC)/.tmp_versions
+	rm -f $(XDMA_SRC)/*.o $(XDMA_SRC)/*.ko $(XDMA_SRC)/*.mod $(XDMA_SRC)/*.mod.c $(XDMA_SRC)/.*.cmd
+	rm -f $(XDMA_SRC)/Module.markers $(XDMA_SRC)/Module.symvers $(XDMA_SRC)/modules.order
+	rm -rf $(XDMA_SRC)/.tmp_versions
+

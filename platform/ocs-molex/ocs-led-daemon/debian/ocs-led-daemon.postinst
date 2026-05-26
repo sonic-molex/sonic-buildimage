@@ -1,0 +1,45 @@
+#!/bin/bash
+#
+# postinst script for ocs-led-daemon
+#
+# This script is executed after the package is installed.
+# It enables the pmon injection service and performs immediate injection
+# if the pmon container is already running.
+
+set -e
+
+case "$1" in
+    configure)
+        # Reload systemd configuration
+        if [ -d /run/systemd/system ]; then
+            systemctl --system daemon-reload >/dev/null || true
+        fi
+        
+        # Enable service (start on boot)
+        if [ -x "/usr/bin/deb-systemd-helper" ]; then
+            deb-systemd-helper enable pmon-inject-ocs-ledd.service >/dev/null || true
+        fi
+        
+        # If pmon container is running, inject ocs-ledd immediately
+        if docker ps --format '{{.Names}}' | grep -q "^pmon$"; then
+            echo "pmon container is running, injecting ocs-ledd now..."
+            /usr/sbin/inject_ocs_ledd.sh || {
+                echo "Warning: Initial injection failed, will retry on next boot"
+            }
+        else
+            echo "pmon container not running yet, will inject on next pmon startup"
+        fi
+        ;;
+    
+    abort-upgrade|abort-remove|abort-deconfigure)
+        ;;
+    
+    *)
+        echo "postinst called with unknown argument \`$1'" >&2
+        exit 1
+        ;;
+esac
+
+#DEBHELPER#
+
+exit 0

@@ -1,0 +1,47 @@
+{
+    "_description": "alarm业务逻辑配置 - ledd使用",
+    "_version": "1.0",
+    "_last_updated": "2026-01-14",
+    
+    "alarm_type_to_led": {
+        "_comment": "alarm type-id (从default.json的name字段) 到LED逻辑port的映射",
+        
+        "_fan_related": "风扇相关告警",
+        "FAN": "system",
+        
+        "_system_related": "系统相关告警",
+        "SYSTEM_STATE": "system",
+        "CPU": "system",
+        "SENSOR_TEMP_HIGH": "system",
+        "TEMPERATURE": "system",
+        "VOLTAGE": "system",
+        "POWER": "system",
+        
+        "_hardware_components": "具体硬件组件（如果alarm包含具体组件名）",
+        "_comment_hardware": "这些映射用于alarm的type-id或resource字段包含具体组件名的情况",
+        "Fan0": "Fan0",
+        "Fan1": "Fan1",
+        "Fan2": "Fan2",
+        "FanTray0": "FanTray0",
+        "FanTray1": "FanTray1",
+        "FanTray2": "FanTray2",
+        
+        "DC0-0": "DC0-0",
+        "DC1-0": "DC1-0",
+        "DC2-0": "DC2-0",
+        "DC3-0": "DC3-0",
+        "OPC0-0": "OPC0-0",
+        
+        "PSU0": "system",
+        "PSU1": "system",
+        
+        "SUPERVISOR0": "system"
+    },
+    
+    "default": {
+        "_comment": "默认值配置",
+        "unknown_alarm": "system",
+        "unknown_state": "degraded"
+    }
+}
+

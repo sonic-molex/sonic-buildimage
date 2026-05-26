@@ -1,0 +1,32 @@
+## rsyslog-plugin for streaming telemetry via gnmi
+
+template(name="prog_msg" type="list") {
+    property(name="msg")
+    constant(value="\n")
+}
+
+template(name="auth_msg" type="list") {
+    constant(value="AUTH: ")
+    property(name="msg")
+    constant(value="\n")
+}
+
+{% for proc in proclist %}
+{% if proc.name == "sshd" %}
+if re_match($programname, "{{ proc.name }}") then {
+    action(type="omprog"
+        binary="/usr/bin/rsyslog_plugin -r /etc/rsyslog.d/{{ proc.parse_json }} -m {{ yang_module }}"
+        output="/var/log/rsyslog_plugin.log"
+        signalOnClose="on"
+        template="auth_msg")
+}
+{% else %}
+if re_match($programname, "{{ proc.name }}") then {
+    action(type="omprog"
+        binary="/usr/bin/rsyslog_plugin -r /etc/rsyslog.d/{{ proc.parse_json }} -m {{ yang_module }}"
+        output="/var/log/rsyslog_plugin.log"
+        signalOnClose="on"
+        template="prog_msg")
+}
+{% endif %}
+{% endfor %}

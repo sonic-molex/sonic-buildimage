@@ -1,0 +1,31 @@
+{
+    "chassis": {
+        "OCS": {
+            "component": {}
+        }
+    },
+    "module": {
+        "LINE-CARD0": {
+            "component": {
+                "OCS0-0": {
+                    "firmware": "ocs_16x16_0.01.0014.bin",
+                    "version": "0.01.0014"
+                }
+            }
+        },
+        "SUPERVISOR0": {
+            "component": {
+                "BIOS": {},
+                "CPLD": {
+                    "firmware": "ueno_cpld_0.04.0001.vme",
+                    "version": "0.04.0001"
+                },
+                "FPGA": {
+                    "firmware": "me0b_scc_fpga_0.04.0002.bin",
+                    "version": "0.04.0002"
+                },
+                "ONIE": {}
+            }
+        }
+    }
+}

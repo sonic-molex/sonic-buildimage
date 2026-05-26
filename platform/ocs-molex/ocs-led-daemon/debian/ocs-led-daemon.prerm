@@ -1,0 +1,41 @@
+#!/bin/bash
+#
+# prerm script for ocs-led-daemon
+#
+# This script is executed before the package is removed.
+# It stops services and cleans up ocs-ledd from the pmon container.
+
+set -e
+
+case "$1" in
+    remove|deconfigure)
+        # Stop pmon injection service
+        if systemctl is-active --quiet pmon-inject-ocs-ledd.service; then
+            echo "Stopping pmon-inject-ocs-ledd.service..."
+            systemctl stop pmon-inject-ocs-ledd.service 2>/dev/null || true
+        fi
+        
+        # Remove ocs-ledd from pmon container if it's running
+        if docker ps --format '{{.Names}}' | grep -q "^pmon$"; then
+            echo "Removing ocs-ledd from pmon container..."
+            docker exec pmon supervisorctl stop ocs-ledd 2>/dev/null || true
+            docker exec pmon supervisorctl remove ocs-ledd 2>/dev/null || true
+            docker exec pmon rm -f /usr/local/bin/ocs-ledd 2>/dev/null || true
+            docker exec pmon rm -f /etc/supervisor/conf.d/ocs-ledd.conf 2>/dev/null || true
+            echo "Cleaned up ocs-ledd from pmon container"
+        fi
+        ;;
+    
+    upgrade|failed-upgrade)
+        # Don't remove on upgrade
+        ;;
+    
+    *)
+        echo "prerm called with unknown argument \`$1'" >&2
+        exit 1
+        ;;
+esac
+
+#DEBHELPER#
+
+exit 0

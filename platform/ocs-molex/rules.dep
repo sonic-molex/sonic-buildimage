@@ -1,0 +1,10 @@
+#DPKG FRK
+include $(PLATFORM_PATH)/thrift.dep
+include $(PLATFORM_PATH)/hal-server.dep
+include $(PLATFORM_PATH)/hal-client.dep
+include $(PLATFORM_PATH)/sai.dep
+include $(PLATFORM_PATH)/docker-syncd-ocs.dep
+include $(PLATFORM_PATH)/platform-modules-molex.dep
+include $(PLATFORM_PATH)/ocs-led-daemon.dep
+include $(PLATFORM_PATH)/sonic-cli-filter.dep
+include $(PLATFORM_PATH)/one-image.dep

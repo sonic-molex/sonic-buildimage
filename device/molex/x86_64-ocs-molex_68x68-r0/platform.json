@@ -1,0 +1,205 @@
+{
+    "chassis": {
+        "components": [],
+        "fan_drawers": [
+            {
+                "fans": [
+                    {
+                        "name": "Fan0",
+                        "speed": {
+                            "controllable": true
+                        },
+                        "status_led": {
+                            "status_led": true
+                        }
+                    }
+                ],
+                "name": "FanTray0",
+                "status_led": {
+                    "controllable": true
+                }
+            },
+            {
+                "fans": [
+                    {
+                        "name": "Fan1",
+                        "speed": {
+                            "controllable": true
+                        },
+                        "status_led": {
+                            "status_led": true
+                        }
+                    }
+                ],
+                "name": "FanTray1",
+                "status_led": {
+                    "controllable": true
+                }
+            },
+            {
+                "fans": [
+                    {
+                        "name": "Fan2",
+                        "speed": {
+                            "controllable": true
+                        },
+                        "status_led": {
+                            "status_led": true
+                        }
+                    }
+                ],
+                "name": "FanTray2",
+                "status_led": {
+                    "controllable": true
+                }
+            }
+        ],
+        "modules": [
+            {
+                "components": [
+                    {
+                        "description": "MEMS high voltage driver card",
+                        "name": "DC0-0"
+                    }
+                ],
+                "description": "MEMS high voltage driver card",
+                "name": "LINE-CARD0"
+            },
+            {
+                "components": [
+                    {
+                        "description": "MEMS high voltage driver card",
+                        "name": "DC1-0"
+                    }
+                ],
+                "description": "MEMS high voltage driver card",
+                "name": "LINE-CARD1"
+            },
+            {
+                "components": [
+                    {
+                        "description": "MEMS high voltage driver card",
+                        "name": "DC2-0"
+                    }
+                ],
+                "description": "MEMS high voltage driver card",
+                "name": "LINE-CARD2"
+            },
+            {
+                "components": [
+                    {
+                        "description": "MEMS high voltage driver card",
+                        "name": "DC3-0"
+                    }
+                ],
+                "description": "MEMS high voltage driver card",
+                "name": "LINE-CARD3"
+            },
+	    {
+                "components": [
+                    {
+                        "description": "Optical core card",
+                        "name": "OPC0-0"
+                    }
+                ],
+                "description": "Optical core card",
+                "name": "LINE-CARD4"
+            },
+            {
+                "components": [
+                    {
+                        "description": "Performs initialization of hardware components during booting",
+                        "name": "BIOS"
+                    },
+                    {
+                        "description": "CPLD in FPC Card",
+                        "name": "CPLD-FPC"
+                    },
+                    {
+                        "description": "Used for managing IO modules",
+                        "name": "CPLD"
+                    },
+                    {
+                        "description": "Platform managment controller for on-board components",
+                        "name": "FPGA"
+                    },
+                    {
+                        "description": "Open network install environment",
+                        "name": "ONIE"
+                    }
+                ],
+                "description": "Supervisor module",
+                "name": "SUPERVISOR0"
+            }
+        ],
+        "name": "OCS",
+        "psus": [
+            {
+                "fans": [
+                    {
+                        "name": "PSU0-Fan",
+                        "speed": {
+                            "controllable": false
+                        },
+                        "status_led": {
+                            "available": false
+                        }
+                    }
+                ],
+                "name": "PSU0",
+                "status_led": {
+                    "status_led": false
+                }
+            },
+            {
+                "fans": [
+                    {
+                        "name": "PSU1-Fan",
+                        "speed": {
+                            "controllable": false
+                        },
+                        "status_led": {
+                            "available": false
+                        }
+                    }
+                ],
+                "name": "PSU1",
+                "status_led": {
+                    "status_led": false
+                }
+            }
+        ],
+        "status_led": {
+            "colors": [
+                "off",
+                "red",
+                "green",
+                "amber",
+                "red blink",
+                "green blink",
+                "amber blink"
+            ],
+            "controllable": true
+        },
+        "thermal_manager": false,
+        "thermals": [
+            {
+                "controllable": false,
+                "high-crit-threshold": false,
+                "low-crit-threshold": false,
+                "maximum-recorded": false,
+                "minimum-recorded": false,
+                "name": "System Exhaust"
+            },
+            {
+                "controllable": false,
+                "high-crit-threshold": false,
+                "low-crit-threshold": false,
+                "maximum-recorded": false,
+                "minimum-recorded": false,
+                "name": "System Board"
+            }
+        ]
+    },
+    "interfaces": {}
+}

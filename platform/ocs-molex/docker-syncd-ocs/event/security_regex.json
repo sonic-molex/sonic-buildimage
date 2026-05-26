@@ -1,0 +1,17 @@
+[                                                                                                                                                                                                                                           
+    {
+        "tag": "FIREWALL",
+        "regex": ".*(FIREWALL BLOCK:) (.*)",
+        "params": [ "type-id","text" ]
+    },
+    {
+        "tag": "AUTH",
+        "regex": "(AUTH):(.*Failed password.*)",
+        "params": [ "type-id","text"]
+    },
+    {
+        "tag": "AUTH",
+        "regex": "(AUTH):(.*authentication failure.*)",
+        "params": [ "type-id","text"]
+    }
+]

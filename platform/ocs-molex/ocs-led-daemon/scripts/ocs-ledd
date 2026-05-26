@@ -1,0 +1,546 @@
+#!/usr/bin/python3
+
+"""
+    ledd
+    LED control daemon for SONiC - Alarm-driven LED management
+    
+    This daemon monitors alarm events from EVENT_DB and controls LEDs
+    based on alarm status through the platform-specific led_control plugin.
+"""
+
+try:
+    import getopt
+    import json
+    import os
+    import sys
+    from sonic_py_common import daemon_base
+    from sonic_py_common import device_info
+    from swsscommon import swsscommon
+except ImportError as e:
+    raise ImportError(str(e) + " - required module not found")
+
+#============================= Constants =============================
+
+VERSION = '2.0'
+
+SYSLOG_IDENTIFIER = "ledd"
+
+USAGE_HELP = """
+Usage: ledd [options]
+
+Options:
+  -h,--help       Print this usage statement and exit
+  -v,--version    Print version information and exit
+"""
+
+LED_MODULE_NAME = "led_control"
+LED_CLASS_NAME = "LedControl"
+ALARM_CONFIG_FILE = "alarm_mapping.json"
+
+SELECT_TIMEOUT = 1000
+
+# Database
+EVENT_DB = "EVENT_DB"
+ALARM_TABLE = "ALARM"
+
+# Error codes
+LEDUTIL_LOAD_ERROR = 1
+CONFIG_LOAD_ERROR = 2
+ALARM_SELECT_ERROR = 3
+
+
+#============================= Classes =============================
+
+class Alarm:
+    """Represents a single alarm event"""
+    
+    # Alarm actions
+    RAISE = "RAISE"
+    CLEAR = "CLEAR"
+    
+    # Alarm severities
+    CRITICAL = "CRITICAL"
+    MAJOR = "MAJOR"
+    MINOR = "MINOR"
+    WARNING = "WARNING"
+    
+    def __init__(self, type_id, action, severity, text="", acknowledged="false"):
+        self.type_id = type_id
+        self.action = action
+        self.severity = severity
+        self.text = text
+        self.acknowledged = acknowledged
+    
+    def __str__(self):
+        return "Alarm(type_id='{}', action='{}', severity='{}', text='{}')".format(
+            self.type_id, self.action, self.severity, self.text)
+
+
+class DaemonLedd(daemon_base.DaemonBase):
+    """
+    LED control daemon - Alarm business logic layer
+    
+    Responsibilities:
+    1. Monitor alarm events from EVENT_DB
+    2. Maintain local cache to handle eventd DEL operation limitation
+    3. Implement alarm aggregation (multiple alarms -> one LED)
+    4. Map alarm type-id to LED logical port name
+    5. Determine LED state based on alarm attributes
+    6. Call led_control.port_link_state_change() to control LEDs
+    """
+    
+    # Severity priority for alarm aggregation
+    SEVERITY_PRIORITY = {
+        "CRITICAL": 4,
+        "MAJOR": 3,
+        "MINOR": 2,
+        "WARNING": 1,
+        "": 0
+    }
+
+    def __init__(self):
+        """
+        Initialize LED daemon for Alarm monitoring
+        
+        Steps:
+        1. Initialize parent class
+        2. Load led_control platform plugin
+        3. Load alarm_mapping.json configuration
+        4. Initialize local cache for alarm tracking
+        5. Subscribe to EVENT_DB ALARM table
+        6. Initialize all LEDs to green
+        7. Sync existing alarms and rebuild cache
+        """
+        # Step 1: Initialize parent class
+        daemon_base.DaemonBase.__init__(self, SYSLOG_IDENTIFIER)
+        
+        # Step 2: Load platform-specific LedControl module
+        try:
+            self.led_control = self.load_platform_util(LED_MODULE_NAME, LED_CLASS_NAME)
+        except Exception as e:
+            self.log_error("Failed to load ledutil: {}".format(str(e)), True)
+            sys.exit(LEDUTIL_LOAD_ERROR)
+        
+        # Step 3: Load alarm mapping configuration
+        self._load_alarm_config()
+        
+        # Step 4: Initialize local cache
+        # Cache 1: alarm_id -> type_id (for DEL operation)
+        self.active_alarms = {}
+        
+        # Cache 2: led_port -> {alarm_id: severity} (for alarm aggregation)
+        self.led_alarms = {}
+        
+        # Cache 3: led_port -> current_state (for change detection)
+        self.led_current_state = {}
+        
+        self.log_notice("Initialized local cache for alarm tracking")
+        
+        # Step 5: Subscribe to EVENT_DB ALARM table
+        try:
+            # Connect to EVENT_DB using daemon_base helper (recommended way)
+            self.event_db = daemon_base.db_connect(EVENT_DB)
+            
+            # Subscribe to ALARM table changes using SubscriberStateTable
+            self.alarm_table = swsscommon.SubscriberStateTable(self.event_db, ALARM_TABLE)
+            
+            # Create selector for event loop
+            self.sel = swsscommon.Select()
+            self.sel.addSelectable(self.alarm_table)
+            
+            self.log_notice("Subscribed to EVENT_DB ALARM table")
+        except Exception as e:
+            self.log_error("Failed to subscribe to EVENT_DB: {}".format(str(e)), True)
+            sys.exit(ALARM_SELECT_ERROR)
+        
+        # Step 6: Initialize all LEDs to green
+        self._initialize_all_leds()
+        
+        # Step 7: Sync existing alarms and rebuild cache
+        self._sync_existing_alarms()
+        
+        self.log_notice("LED daemon initialized successfully")
+    
+    def _load_alarm_config(self):
+        """
+        Load alarm mapping configuration from JSON file
+        
+        Configuration file contains:
+        - alarm_type_to_led: Maps alarm type-id to LED logical port name
+        - default: Fallback values for unknown alarms
+        """
+        try:
+            # Get platform device path
+            platform_path = device_info.get_path_to_platform_dir()
+            config_path = os.path.join(platform_path, ALARM_CONFIG_FILE)
+            
+            # Check if config file exists
+            if not os.path.exists(config_path):
+                self.log_error("Alarm config file not found: {}".format(config_path), True)
+                sys.exit(CONFIG_LOAD_ERROR)
+            
+            # Load configuration
+            with open(config_path, 'r') as f:
+                config = json.load(f)
+            
+            # Parse alarm_type_to_led mapping
+            self.alarm_to_led_map = config.get("alarm_type_to_led", {})
+            
+            # Parse default values
+            self.default_config = config.get("default", {})
+            self.default_led_port = self.default_config.get("unknown_alarm", "system")
+            self.default_state = self.default_config.get("unknown_state", "degraded")
+            
+            self.log_notice("Loaded alarm config: {} alarm types mapped".format(len(self.alarm_to_led_map)))
+            
+        except json.JSONDecodeError as e:
+            self.log_error("Invalid JSON in config file: {}".format(str(e)), True)
+            sys.exit(CONFIG_LOAD_ERROR)
+        except Exception as e:
+            self.log_error("Failed to load alarm config: {}".format(str(e)), True)
+            sys.exit(CONFIG_LOAD_ERROR)
+    
+    def _initialize_all_leds(self):
+        """
+        Initialize all LEDs to green state on daemon startup
+        
+        Purpose: Ensure all LEDs start with a known state before syncing alarms
+        """
+        try:
+            # Get all unique LED ports from alarm_mapping
+            all_led_ports = set(self.alarm_to_led_map.values())
+            
+            # Initialize each LED to green (state="up")
+            success_count = 0
+            for led_port in all_led_ports:
+                try:
+                    self.led_control.port_link_state_change(led_port, "up")
+                    success_count += 1
+                except Exception as e:
+                    self.log_warning("Failed to initialize LED '{}': {}".format(led_port, str(e)))
+            
+            self.log_notice("Initialized {} LEDs to green state".format(success_count))
+            
+        except Exception as e:
+            self.log_error("Failed to initialize LEDs: {}".format(str(e)))
+    
+    def _sync_existing_alarms(self):
+        """
+        Synchronize existing alarms from EVENT_DB and rebuild cache
+        
+        This handles the case where alarms exist before ledd starts.
+        Process all ALARM|* keys, rebuild cache, and update LEDs based on aggregation.
+        """
+        try:
+            # Get all ALARM keys from EVENT_DB
+            alarm_keys = self.event_db.keys("ALARM|*")
+            
+            if not alarm_keys:
+                self.log_notice("No existing alarms to sync")
+                return
+            
+            # Rebuild cache from existing alarms
+            sync_count = 0
+            for key in alarm_keys:
+                # Extract alarm data
+                alarm_data = self.event_db.get_all(swsscommon.ALARM_TABLE, key)
+                
+                if alarm_data:
+                    # Only process RAISE alarms (ignore CLEAR)
+                    action = alarm_data.get("action", "")
+                    if action == Alarm.RAISE:
+                        # Extract alarm_id from key (format: "ALARM|{id}")
+                        alarm_id = key.split("|")[-1] if "|" in key else key
+                        type_id = alarm_data.get("type-id", "")
+                        severity = alarm_data.get("severity", "")
+                        
+                        if not type_id:
+                            continue
+                        
+                        # Map to LED port
+                        led_port = self.alarm_to_led_map.get(type_id, self.default_led_port)
+                        
+                        # Rebuild cache 1: active_alarms
+                        self.active_alarms[alarm_id] = type_id
+                        
+                        # Rebuild cache 2: led_alarms
+                        if led_port not in self.led_alarms:
+                            self.led_alarms[led_port] = {}
+                        self.led_alarms[led_port][alarm_id] = severity
+                        
+                        sync_count += 1
+            
+            self.log_notice("Synced {} existing RAISE alarms, rebuilt cache".format(sync_count))
+            
+            # Update all affected LEDs based on aggregated state
+            for led_port in self.led_alarms.keys():
+                self._update_led_if_changed(led_port)
+            
+        except Exception as e:
+            self.log_error("Failed to sync existing alarms: {}".format(str(e)))
+    
+    def _determine_led_state_for_port(self, led_port):
+        """
+        Determine LED state for a port based on alarm aggregation (v7.0)
+        
+        When multiple alarms affect the same LED, take the highest severity.
+        
+        Args:
+            led_port (str): LED logical port name (e.g., "system", "Fan0")
+        
+        Returns:
+            str: LED state ("up", "down", "degraded")
+        """
+        # Get all alarms for this LED
+        alarms = self.led_alarms.get(led_port, {})
+        
+        # No alarms -> LED green
+        if not alarms:
+            return "up"
+        
+        # Find the highest severity
+        max_severity = max(
+            alarms.values(),
+            key=lambda s: self.SEVERITY_PRIORITY.get(s, 0)
+        )
+        
+        # Map severity to LED state
+        if max_severity in [Alarm.CRITICAL, Alarm.MAJOR]:
+            return "down"  # Red LED
+        elif max_severity in [Alarm.MINOR, Alarm.WARNING]:
+            return "degraded"  # Amber LED
+        else:
+            # Unknown severity -> use default
+            return self.default_state
+    
+    def _update_led_if_changed(self, led_port):
+        """
+        Update LED only if state has changed (optimization)
+        
+        This method:
+        1. Calculates new LED state based on alarm aggregation
+        2. Compares with cached current state
+        3. Only calls hardware API if state changed
+        4. Updates state cache
+        
+        Args:
+            led_port (str): LED logical port name
+        
+        Returns:
+            bool: True if LED was updated, False if no change
+        """
+        # Calculate new state based on current alarms
+        new_state = self._determine_led_state_for_port(led_port)
+        
+        # Get current cached state
+        current_state = self.led_current_state.get(led_port)
+        
+        # Check if state changed
+        if current_state == new_state:
+            # No change, skip hardware call
+            return False
+        
+        # State changed, update hardware
+        try:
+            self.led_control.port_link_state_change(led_port, new_state)
+            
+            # Update cache
+            self.led_current_state[led_port] = new_state
+            
+            self.log_info("LED '{}' changed: '{}' -> '{}'".format(
+                led_port, current_state if current_state else "unknown", new_state))
+            
+            return True
+            
+        except Exception as e:
+            self.log_error("Failed to update LED '{}': {}".format(led_port, str(e)))
+            return False
+    
+    def _determine_alarm_state(self, action, severity):
+        """
+        Determine LED state based on single alarm attributes
+        
+        Note: This is kept for backward compatibility but should use
+        _determine_led_state_for_port() for proper aggregation.
+        
+        Args:
+            action (str): "RAISE" or "CLEAR"
+            severity (str): "CRITICAL", "MAJOR", "MINOR", "WARNING"
+        
+        Returns:
+            str: LED state ("up", "down", "degraded", "off")
+        """
+        # Clear alarm -> LED green
+        if action == Alarm.CLEAR:
+            return "up"
+        
+        # Raise alarm -> based on severity
+        if severity in [Alarm.CRITICAL, Alarm.MAJOR]:
+            return "down"  # Red LED
+        elif severity in [Alarm.MINOR, Alarm.WARNING]:
+            return "degraded"  # Amber LED
+        else:
+            # Unknown severity -> use default
+            return self.default_state
+    
+    def _handle_set_operation(self, key, alarm_data):
+        """
+        Handle SET operation (RAISE alarm) with cache update and aggregation
+        
+        Args:
+            key (str): Redis key (e.g., "ALARM|1001")
+            alarm_data (dict): Alarm data from Redis
+                - type-id: Alarm type identifier
+                - action: "RAISE" or "CLEAR"
+                - severity: "CRITICAL", "MAJOR", "MINOR", "WARNING"
+                - text: Description (optional)
+        """
+        try:
+            # Extract alarm_id from key (format: "ALARM|{id}")
+            alarm_id = key.split("|")[-1] if "|" in key else key
+            
+            # Extract alarm attributes
+            type_id = alarm_data.get("type-id", "")
+            action = alarm_data.get("action", "")
+            severity = alarm_data.get("severity", "")
+            text = alarm_data.get("text", "")
+            
+            if not type_id or not action:
+                self.log_warning("Incomplete alarm data: {}".format(alarm_data))
+                return
+            
+            # Map alarm type-id to LED port
+            led_port = self.alarm_to_led_map.get(type_id, self.default_led_port)
+            
+            # Update cache 1: active_alarms
+            self.active_alarms[alarm_id] = type_id
+            
+            # Update cache 2: led_alarms (for aggregation)
+            if led_port not in self.led_alarms:
+                self.led_alarms[led_port] = {}
+            self.led_alarms[led_port][alarm_id] = severity
+            
+            # Update LED only if state changed
+            changed = self._update_led_if_changed(led_port)
+            
+            self.log_info("SET: alarm_id='{}', type-id='{}', severity='{}' -> LED '{}' {}".format(
+                alarm_id, type_id, severity, led_port, 
+                "updated" if changed else "unchanged"))
+            
+        except Exception as e:
+            self.log_error("Failed to handle SET operation: {}".format(str(e)))
+    
+    def _handle_del_operation(self, key):
+        """
+        Handle DEL operation (CLEAR alarm) using local cache
+        
+        Note: eventd DEL operation provides empty fvp, so we must use cache.
+        
+        Args:
+            key (str): Redis key (e.g., "ALARM|1001")
+        """
+        try:
+            # Extract alarm_id from key (format: "ALARM|{id}")
+            alarm_id = key.split("|")[-1] if "|" in key else key
+            
+            # Get type-id from cache (critical for DEL operation)
+            type_id = self.active_alarms.pop(alarm_id, None)
+            
+            if not type_id:
+                self.log_warning("DEL unknown alarm_id='{}' (not in cache)".format(alarm_id))
+                return
+            
+            # Map to LED port
+            led_port = self.alarm_to_led_map.get(type_id, self.default_led_port)
+            
+            # Remove from led_alarms cache
+            if led_port in self.led_alarms:
+                self.led_alarms[led_port].pop(alarm_id, None)
+                
+                # Clean up empty led_port entry
+                if not self.led_alarms[led_port]:
+                    del self.led_alarms[led_port]
+            
+            # Update LED only if state changed
+            changed = self._update_led_if_changed(led_port)
+            
+            self.log_info("DEL: alarm_id='{}', type-id='{}' -> LED '{}' {}".format(
+                alarm_id, type_id, led_port,
+                "updated" if changed else "unchanged"))
+            
+        except Exception as e:
+            self.log_error("Failed to handle DEL operation: {}".format(str(e)))
+
+    def run(self):
+        """
+        Main event loop - Monitor ALARM table for changes
+        
+        Returns:
+            int: 0 on success, non-zero on error or timeout
+        """
+        # Use timeout to prevent ignoring signals (e.g. SIGTERM for graceful shutdown)
+        (state, selectableObj) = self.sel.select(SELECT_TIMEOUT)
+        
+        if state == swsscommon.Select.TIMEOUT:
+            # Do not flood log when select times out
+            return 1
+        
+        if state != swsscommon.Select.OBJECT:
+            self.log_warning("sel.select() did not return swsscommon.Select.OBJECT")
+            return 2
+        
+        # Pop alarm event from subscriber table
+        (key, op, fvp) = self.alarm_table.pop()
+        
+        # Handle SET and DEL operations differently
+        if op == "SET":
+            # SET operation: fvp contains alarm data
+            if not fvp:
+                self.log_warning("SET operation with empty fvp")
+                return 3
+            
+            alarm_data = dict(fvp)
+            self._handle_set_operation(key, alarm_data)
+            
+        elif op == "DEL":
+            # DEL operation: fvp is EMPTY due to eventd limitation
+            # Must use local cache to get type-id
+            self._handle_del_operation(key)
+        
+        return 0
+
+
+def main():
+    """Main entry point"""
+    # Parse command line options
+    if len(sys.argv) > 1:
+        try:
+            (options, remainder) = getopt.getopt(sys.argv[1:], 'hv', ['help', 'version'])
+        except getopt.GetoptError as e:
+            print(e)
+            print(USAGE_HELP)
+            sys.exit(1)
+        
+        for opt, arg in options:
+            if opt == '--help' or opt == '-h':
+                print(USAGE_HELP)
+                sys.exit(0)
+            elif opt == '--version' or opt == '-v':
+                print('ledd version {}'.format(VERSION))
+                sys.exit(0)
+    
+    # Initialize daemon
+    ledd = DaemonLedd()
+    
+    # Main event loop - listen for ALARM table changes in EVENT_DB
+    while True:
+        ret = ledd.run()
+        if ret != 0 and ret != 1:
+            # ret=1 is SELECT_TIMEOUT (normal), continue
+            # ret=2,3,etc are errors, exit
+            print("ledd.run() failed with error code {}... Exiting".format(ret))
+            sys.exit(ALARM_SELECT_ERROR)
+
+
+if __name__ == '__main__':
+    main()

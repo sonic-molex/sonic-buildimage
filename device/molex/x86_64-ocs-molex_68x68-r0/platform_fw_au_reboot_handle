@@ -1,0 +1,294 @@
+#!/usr/bin/env python3
+#
+# platform_fw_au_reboot_handle
+#
+# Platform-specific firmware auto-update reboot handler for SONiC
+#
+
+import os
+import sys
+import json
+import traceback
+
+try:
+    from sonic_py_common import logger
+    from sonic_platform import platform
+except ImportError as e:
+    print(f"Error importing required modules: {e}", file=sys.stderr)
+    sys.exit(1)
+
+# ========================= Constants ==========================================
+
+FIRMWARE_AU_STATUS_DIR = "/tmp/firmwareupdate"
+FW_AU_STATUS_FILE = "fw_au_status"
+FW_AU_STATUS_FILE_PATH = os.path.join(FIRMWARE_AU_STATUS_DIR, FW_AU_STATUS_FILE)
+FW_STATUS_SCHEDULED = "scheduled"
+SYSLOG_IDENTIFIER = "platform_fw_au_reboot_handle"
+
+GREEN = '\033[92m'
+RED = '\033[91m'
+YELLOW = '\033[93m'
+RESET = '\033[0m'
+
+# ========================= Logger Setup =======================================
+
+syslog = logger.Logger(SYSLOG_IDENTIFIER)
+syslog.set_min_log_priority_info()
+
+# ========================= Logging Functions ==================================
+
+def log_info(msg, **kwargs):
+    """Log informational message"""
+    print(f"[INFO] {msg}")
+    if kwargs:
+        syslog.log_info(", ".join(f"{k}={v}" for k, v in kwargs.items()))
+    else:
+        syslog.log_info(msg)
+
+def log_success(msg, **kwargs):
+    """Log success message"""
+    print(f"{GREEN}[SUCCESS]{RESET} {msg}")
+    syslog_msg = "SUCCESS: " + (", ".join(f"{k}={v}" for k, v in kwargs.items()) if kwargs else msg)
+    syslog.log_info(syslog_msg)
+
+def log_error(msg, **kwargs):
+    """Log error message"""
+    print(f"{RED}[ERROR]{RESET} {msg}", file=sys.stderr)
+    if kwargs:
+        syslog.log_error(", ".join(f"{k}={v}" for k, v in kwargs.items()))
+    else:
+        syslog.log_error(msg)
+
+def log_warning(msg, **kwargs):
+    """Log warning message"""
+    print(f"{YELLOW}[WARNING]{RESET} {msg}")
+    if kwargs:
+        syslog.log_warning(", ".join(f"{k}={v}" for k, v in kwargs.items()))
+    else:
+        syslog.log_warning(msg)
+
+# ========================= Helper classes =====================================
+
+class StatusFileHandler(object):
+    """StatusFileHandler"""
+    
+    @staticmethod
+    def read_au_status_file():
+        """Read and parse the firmware auto-update status file"""
+        if not os.path.exists(FW_AU_STATUS_FILE_PATH):
+            log_info("No firmware auto-update status file found")
+            return None
+        
+        try:
+            with open(FW_AU_STATUS_FILE_PATH, 'r') as f:
+                data = json.load(f)
+            log_info(f"Loaded status file: {FW_AU_STATUS_FILE_PATH}")
+            return data
+        except Exception as e:
+            log_error(f"Failed to read status file: {e}", error=str(e))
+            return None
+    
+    @staticmethod
+    def filter_scheduled_components(data, boot_type):
+        """Filter components scheduled for the given boot type"""
+        if not data or boot_type not in data:
+            return []
+        
+        scheduled = [c for c in data[boot_type] if c.get('info') == FW_STATUS_SCHEDULED and c.get('status') == True]
+        
+        # Deduplicate by component path (keep the last occurrence)
+        unique_comps = {}
+        for comp in scheduled:
+            comp_path = comp.get('comp', '')
+            if comp_path:
+                unique_comps[comp_path] = comp
+        
+        unique_scheduled = list(unique_comps.values())
+        log_info(f"Found {len(unique_scheduled)} scheduled component(s) (deduplicated from {len(scheduled)})", boot_type=boot_type, count=len(unique_scheduled), total=len(scheduled))
+        for comp in unique_scheduled:
+            log_info(f"  - {comp.get('comp', 'unknown')}: {comp.get('version', 'unknown')}")
+        return unique_scheduled
+
+
+class ComponentLocator(object):
+    """ComponentLocator"""
+    
+    @staticmethod
+    def get_component_object(chassis, comp_path):
+        """Get component object from chassis based on component path"""
+        parts = comp_path.split('/')
+        
+        if len(parts) == 3:
+            chassis_name, module_name, comp_name = parts
+            modules = chassis.get_all_modules()
+            target_module = next((m for m in modules if m.get_name() == module_name), None)
+            
+            if not target_module:
+                log_error(f"Module '{module_name}' not found", module=module_name)
+                return None, None
+            
+            components = target_module.get_all_components()
+            component = next((c for c in components if c.get_name() == comp_name), None)
+            if component:
+                return component, comp_name
+            log_error(f"Component '{comp_name}' not found in module '{module_name}'", component=comp_name, module=module_name)
+            return None, None
+            
+        elif len(parts) == 2:
+            chassis_name, comp_name = parts
+            components = chassis.get_all_components()
+            component = next((c for c in components if c.get_name() == comp_name), None)
+            if component:
+                return component, comp_name
+            log_error(f"Component '{comp_name}' not found in chassis", component=comp_name)
+            return None, None
+        
+        log_error(f"Invalid component path: {comp_path}", path=comp_path)
+        return None, None
+
+
+class UpgradeOrchestrator(object):
+    """UpgradeOrchestrator"""
+    
+    @staticmethod
+    def execute_remaining_steps(component, boot_type):
+        """
+        Execute remaining firmware upgrade steps
+        Note: Step 0 (upgrade) is skipped as it was completed in fwutil phase
+        """
+        flag = component.upgrade_workflow_flag
+        comp_name = component.get_name()
+        
+        log_info(f"Executing remaining steps for {comp_name}", component=comp_name, boot_type=boot_type, workflow=str(flag))
+        
+        try:
+            # Step 0: Skip - already completed in fwutil phase
+            log_info(f"Step 0 (upgrade): SKIPPED - completed in fwutil phase", component=comp_name, step="upgrade", status="skipped")
+            
+            # Step 1: switch
+            if len(flag) > 1 and flag[1]:
+                log_info(f"Executing upgrade_switch", component=comp_name, step="switch")
+                if hasattr(component, 'upgrade_switch'):
+                    if not component.upgrade_switch():
+                        log_error(f"upgrade_switch failed", component=comp_name, step="switch", status="failure")
+                        return False
+                    log_success(f"upgrade_switch completed", component=comp_name, step="switch", status="success")
+                else:
+                    log_warning(f"upgrade_switch not implemented", component=comp_name, step="switch")
+            else:
+                log_info(f"Step 1 (switch): SKIPPED", component=comp_name, step="switch", status="skipped", flag=str(flag[1] if len(flag) > 1 else "N/A"))
+            
+            # Step 2: reset (critical for CPLD/FPGA)
+            if len(flag) > 2 and flag[2]:
+                log_info(f"Executing upgrade_reset", component=comp_name, step="reset")
+                if hasattr(component, 'upgrade_reset'):
+                    ret = component.upgrade_reset()
+                    if not ret:
+                        log_error(f"upgrade_reset failed", component=comp_name, step="reset", status="failure")
+                        return False
+                    log_success(f"upgrade_reset completed", component=comp_name, step="reset", status="success")
+                    
+                    log_info(f"Waiting for reset to complete", component=comp_name, step="reset_waiting")
+                    if hasattr(component, 'upgrade_reset_waiting'):
+                        if not component.upgrade_reset_waiting():
+                            log_error(f"upgrade_reset_waiting failed", component=comp_name, step="reset_waiting", status="failure")
+                            return False
+                        log_success(f"Reset completed", component=comp_name, step="reset_waiting", status="success")
+                else:
+                    log_warning(f"upgrade_reset not implemented", component=comp_name, step="reset")
+            else:
+                log_info(f"Step 2 (reset): SKIPPED", component=comp_name, step="reset", status="skipped", flag=str(flag[2] if len(flag) > 2 else "N/A"))
+            
+            # Step 3: commit
+            if len(flag) > 3 and flag[3]:
+                log_info(f"Executing upgrade_commit", component=comp_name, step="commit")
+                if hasattr(component, 'upgrade_commit'):
+                    if not component.upgrade_commit():
+                        log_error(f"upgrade_commit failed", component=comp_name, step="commit", status="failure")
+                        return False
+                    log_success(f"upgrade_commit completed", component=comp_name, step="commit", status="success")
+                else:
+                    log_warning(f"upgrade_commit not implemented", component=comp_name, step="commit")
+            else:
+                log_info(f"Step 3 (commit): SKIPPED", component=comp_name, step="commit", status="skipped", flag=str(flag[3] if len(flag) > 3 else "N/A"))
+            
+            log_success(f"All remaining steps completed for {comp_name}", component=comp_name, boot_type=boot_type, status="success")
+            return True
+            
+        except Exception as e:
+            log_error(f"Exception during upgrade for {comp_name}: {e}", component=comp_name, exception=str(e))
+            traceback.print_exc()
+            return False
+
+
+# ========================= Main Function ======================================
+
+def main():
+    """Main function to handle firmware auto-update during reboot"""
+    
+    # Parse command-line argument
+    if len(sys.argv) < 2:
+        log_error("Usage: platform_fw_au_reboot_handle <boot_type>")
+        sys.exit(1)
+    
+    boot_arg = sys.argv[1]
+    boot_type_map = {'reboot': 'cold', 'warm-reboot': 'warm', 'fast-reboot': 'fast'}
+    boot_type = boot_type_map.get(boot_arg, boot_arg)
+    log_info(f"Handling firmware auto-update for boot type: {boot_type}", boot_arg=boot_arg, boot_type=boot_type)
+    
+    # Read and filter status file
+    update_status = StatusFileHandler.read_au_status_file()
+    if not update_status:
+        log_info("No pending firmware updates")
+        sys.exit(0)
+    
+    scheduled_components = StatusFileHandler.filter_scheduled_components(update_status, boot_type)
+    if not scheduled_components:
+        log_info(f"No scheduled components for boot type '{boot_type}'")
+        sys.exit(0)
+    
+    # Initialize platform
+    try:
+        platform_obj = platform.Platform()
+        chassis = platform_obj.get_chassis()
+        log_info("Platform initialized successfully")
+    except Exception as e:
+        log_error(f"Failed to initialize platform: {e}", error=str(e))
+        sys.exit(1)
+    
+    # Process each scheduled component
+    success_count = 0
+    fail_count = 0
+    
+    for comp_status in scheduled_components:
+        comp_path = comp_status.get('comp', '')
+        version = comp_status.get('version', 'unknown')
+        
+        print("\n" + "=" * 60)
+        log_info(f"Processing: {comp_path}", component=comp_path, version=version)
+        print("=" * 60)
+        
+        component, comp_name = ComponentLocator.get_component_object(chassis, comp_path)
+        if not component:
+            log_error(f"Failed to get component object for {comp_path}", component=comp_path)
+            fail_count += 1
+            continue
+        
+        success = UpgradeOrchestrator.execute_remaining_steps(component, boot_type)
+        if success:
+            success_count += 1
+        else:
+            fail_count += 1
+    
+    # Output summary
+    print("\n" + "=" * 60)
+    log_info("Firmware Auto-Update Summary")
+    print("=" * 60)
+    log_info(f"Total: {len(scheduled_components)}, Successful: {success_count}, Failed: {fail_count}", total=len(scheduled_components), successful=success_count, failed=fail_count)
+    print("=" * 60 + "\n")
+    
+    sys.exit(1 if fail_count > 0 else 0)
+
+
+if __name__ == "__main__":
+    main()

@@ -1294,6 +1294,13 @@ sudo touch $FILESYSTEM_ROOT_ETC_SONIC/enable_multidb
 # Install syslog counter plugin
 install_deb_package $debs_path/syslog-counter_*.deb
 
+## Load OCS configuration files
+{% if sonic_asic_platform in ["ocs-kvm", "ocs-molex"] %}
+sudo cp $IMAGE_CONFIGS/ocs/ocs-config.service $FILESYSTEM_ROOT_USR_LIB_SYSTEMD_SYSTEM
+sudo cp $IMAGE_CONFIGS/ocs/ocs-config.sh $FILESYSTEM_ROOT/usr/bin/
+echo "ocs-config.service" | sudo tee -a $GENERATED_SERVICE_FILE
+{% endif %}
+
 #############################################################################
 # PLATFORM-SPECIFIC SERVICE FILTERING
 # This section MUST remain at the end of the file to ensure all services
@@ -1338,4 +1345,3 @@ sudo cp $IMAGE_CONFIGS/set-vrf-strict-mode/set-vrf-strict-mode.service $FILESYST
 # Install set-vrf-strict-mode service
 sudo LANG=C chroot $FILESYSTEM_ROOT systemctl enable set-vrf-strict-mode
 {% endif %}
-

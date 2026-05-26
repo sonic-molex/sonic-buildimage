@@ -1,0 +1,32 @@
+[                                                                                                                                                                                                                                           
+    {
+        "tag": "FAN",
+        "regex": ".*(FAN)(.*):(.*) - (RAISE|CLEAR) Alarm",
+        "params": [ "type-id","fan-id","text","action" ]
+    },
+    {
+        "tag": "FAN",
+        "regex": ".*(FAN)(.*):.*failure monitor (started|stopped)",
+        "params": [ "type-id","fan-id","text" ]
+    },
+    {
+        "tag": "POWER",
+        "regex": ".*(POWER)(.*):(.*) - (RAISE|CLEAR) Alarm",
+        "params": [ "type-id","power-id","action","text" ]
+    },
+    {
+        "tag": "TEMPERATURE",
+        "regex": ".*(TEMPERATURE)(.*):(.*) - (RAISE|CLEAR) Alarm",
+        "params": [ "type-id","temperature-id","action","text" ]
+    },
+    {
+        "tag": "VOLTAGE",
+        "regex": ".*(VOLTAGE)(.*):(.*) - (RAISE|CLEAR) Alarm",
+        "params": [ "type-id","voltage-id","action","text" ]
+    },
+    {
+        "tag": "CPU",
+        "regex": ".*(CPU)(.*):(.*) - (RAISE|CLEAR) Alarm",
+        "params": [ "type-id","cpu-id","text","action" ]
+    }
+]
