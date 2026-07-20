@@ -19,9 +19,6 @@ debs/
 # Install locally-built Debian packages and implicitly install their dependencies
 {{ install_debian_packages(docker_syncd_otn_kvm_debs.split(' ')) }}
 
-## Install Thrift 0.17 runtime library
-RUN apt-get install -y libthrift-0.17.0
-
 RUN ldconfig
 
 ## TODO: add kmod into Depends
