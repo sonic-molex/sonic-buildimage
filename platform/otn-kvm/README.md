@@ -8,7 +8,7 @@ For SONiC compilation environment setup, please refer to [sonic-buildimage](http
 ``` bash
 make init
 make configure PLATFORM=otn-kvm
-make BLDENV=bookworm SONIC_BUILD_JOBS=8 target/sonic-otn-kvm.img.gz
+make target/sonic-otn-kvm.img.gz
 ```
 
 # HOWTO setup KVM environment

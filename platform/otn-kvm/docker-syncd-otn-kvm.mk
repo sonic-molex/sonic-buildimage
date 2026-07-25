@@ -1,7 +1,7 @@
 # docker image for otn-kvm syncd
 
 DOCKER_SYNCD_PLATFORM_CODE = otn-kvm
-include $(PLATFORM_PATH)/../template/docker-syncd-bookworm.mk
+include $(PLATFORM_PATH)/../template/docker-syncd-trixie.mk
 
 $(DOCKER_SYNCD_BASE)_DEPENDS += $(SYNCD) \
                                 $(OTN_KVM_LIBSAI_DEB) \
